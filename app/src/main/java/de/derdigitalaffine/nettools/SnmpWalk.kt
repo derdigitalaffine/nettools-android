@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,11 +42,11 @@ private val walkProfiles=listOf(
 @Composable fun SnmpWalkPanel() {
     val scope=rememberCoroutineScope()
     val context=LocalContext.current
-    var host by remember { mutableStateOf("192.168.1.1") }
-    var portText by remember { mutableStateOf("161") }
+    var host by rememberSaveable { mutableStateOf("192.168.1.1") }
+    var portText by rememberSaveable { mutableStateOf("161") }
     var community by remember { mutableStateOf("public") }
-    var root by remember { mutableStateOf("1.3.6.1.2.1.1") }
-    var limitText by remember { mutableStateOf("50") }
+    var root by rememberSaveable { mutableStateOf("1.3.6.1.2.1.1") }
+    var limitText by rememberSaveable { mutableStateOf("50") }
     var busy by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
     var status by remember { mutableStateOf("Bereit") }
