@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
@@ -76,16 +77,16 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
 }
 @Composable fun PortScanner() {
     val scope=rememberCoroutineScope()
-    var host by remember { mutableStateOf("192.168.1.1") }
-    var portsText by remember { mutableStateOf("22,53,80,443,445,8080,8443") }
-    var timeoutText by remember { mutableStateOf("700") }
+    var host by rememberSaveable { mutableStateOf("192.168.1.1") }
+    var portsText by rememberSaveable { mutableStateOf("22,53,80,443,445,8080,8443") }
+    var timeoutText by rememberSaveable { mutableStateOf("700") }
     var active by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
-    var showClosed by remember { mutableStateOf(false) }
-    var concurrencyText by remember { mutableStateOf("16") }
+    var showClosed by rememberSaveable { mutableStateOf(false) }
+    var concurrencyText by rememberSaveable { mutableStateOf("16") }
     val context=LocalContext.current
     var completed by remember { mutableIntStateOf(0) }
-    var shownLimit by remember { mutableIntStateOf(60) }
+    var shownLimit by rememberSaveable { mutableIntStateOf(60) }
     var shareError by remember { mutableStateOf<String?>(null) }
     val results=remember { mutableStateListOf<PortResult>() }
     val serviceDetails=remember { mutableStateMapOf<Int,ServiceIdentification>() }
