@@ -3,6 +3,7 @@ package de.derdigitalaffine.nettools
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -62,12 +63,12 @@ private fun snmpV3Get(host:String,port:Int,oid:String,creds:SnmpV3Credentials):S
 
 @Composable fun SnmpV3Inspector() {
     val scope=rememberCoroutineScope()
-    var host by remember { mutableStateOf("192.168.1.1") }
-    var portText by remember { mutableStateOf("161") }
+    var host by rememberSaveable { mutableStateOf("192.168.1.1") }
+    var portText by rememberSaveable { mutableStateOf("161") }
     var user by remember { mutableStateOf("") }
     var auth by remember { mutableStateOf("") }
     var privacy by remember { mutableStateOf("") }
-    var oid by remember { mutableStateOf("1.3.6.1.2.1.1.1.0") }
+    var oid by rememberSaveable { mutableStateOf("1.3.6.1.2.1.1.1.0") }
     var busy by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<SnmpValue?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
