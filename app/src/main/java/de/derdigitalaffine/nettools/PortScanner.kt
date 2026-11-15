@@ -1,6 +1,10 @@
 package de.derdigitalaffine.nettools
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,10 +23,27 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.Locale
 
+private val scanProfiles=listOf(
+    "Web" to "80,443,8080,8081,8443,8000,8008,8888",
+    "Infrastruktur" to "21,22,23,25,53,67,68,110,123,135,137-139,143,161,389,443,445,465,587,636,993,995,1433,1521,2049,3306,3389,5432,5900,6379,8080,8443,9090",
+    "Alle 1–1024" to "1-1024",
+    "Eigene" to "22,53,80,443,445,8080,8443"
+)
+private val portServiceHints=mapOf(
+    20 to "FTP-Daten",21 to "FTP",22 to "SSH",23 to "Telnet",25 to "SMTP",
+    53 to "DNS",80 to "HTTP",110 to "POP3",123 to "NTP (normalerweise UDP)",
+    135 to "RPC",139 to "NetBIOS",143 to "IMAP",161 to "SNMP (normalerweise UDP)",
+    389 to "LDAP",443 to "HTTPS",445 to "SMB",465 to "SMTPS",587 to "Submission",
+    636 to "LDAPS",993 to "IMAPS",995 to "POP3S",1433 to "MSSQL",1521 to "Oracle",
+    2049 to "NFS",3306 to "MySQL",3389 to "RDP",5432 to "PostgreSQL",
+    5900 to "VNC",6379 to "Redis",8080 to "HTTP-Alt",8443 to "HTTPS-Alt",9090 to "Web/Monitoring"
+)
+
 data class PortResult(val port:Int,val open:Boolean,val latencyMs:Double?,val reason:String)
 fun parsePortList(input:String):List<Int> {
     val ports=linkedSetOf<Int>()
     require(input.isNotBlank()) { "Keine Ports angegeben" }
+    require(input.length<=8192) { "Portliste zu lang" }
     input.split(',').forEach { part ->
         val token=part.trim()
         if('-' in token) {
@@ -39,7 +60,7 @@ fun parsePortList(input:String):List<Int> {
             val p=token.toIntOrNull()
             require(p!=null && p in 1..65535) { "Ungültiger Port: $token" }
             ports.add(p)
-            require(ports.size<=128) { "Maximal 128 Ports pro Lauf" }
+            require(ports.size<=1024) { "Maximal 1024 Ports pro Lauf" }
         }
     }
     return ports.sorted()
@@ -62,6 +83,7 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
     var job by remember { mutableStateOf<Job?>(null) }
     var showClosed by remember { mutableStateOf(false) }
     var concurrencyText by remember { mutableStateOf("16") }
+    val context=LocalContext.current
     var completed by remember { mutableIntStateOf(0) }
     val results=remember { mutableStateListOf<PortResult>() }
     val parsed=remember(portsText) { runCatching { parsePortList(portsText) } }
@@ -74,6 +96,12 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
             style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(host,{host=it},label={Text("Zielhost / IP")},singleLine=true,
             enabled=!active,modifier=Modifier.fillMaxWidth())
+        Text("Scanprofile",style=MaterialTheme.typography.labelLarge)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            scanProfiles.forEach { (name,ports) ->
+                FilterChip(selected=portsText==ports,onClick={ portsText=ports },label={ Text(name) },enabled=!active)
+            }
+        }
         OutlinedTextField(portsText,{portsText=it},label={Text("Ports (Komma oder Bereich, max. 1024)")},
             singleLine=true,enabled=!active,modifier=Modifier.fillMaxWidth())
         OutlinedTextField(timeoutText,{timeoutText=it},label={Text("Timeout je Port (200–5000 ms)")},
@@ -116,6 +144,21 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
             Text("Fortschritt: $completed / ${parsed.getOrNull()?.size ?: 0}")
             LinearProgressIndicator(progress={ completed.toFloat() / (parsed.getOrNull()?.size ?: 1).coerceAtLeast(1) },modifier=Modifier.fillMaxWidth())
         }
+        if(results.isNotEmpty() && !active) {
+            OutlinedButton(onClick={
+                val csv=buildString {
+                    append("Port,Protocol,State,LatencyMs,Note\n")
+                    results.sortedBy { it.port }.forEach { r ->
+                        val ms=r.latencyMs?.let { "%.2f".format(Locale.US,it) } ?: ""
+                        append(r.port);append(",tcp,");append(if(r.open) "open" else "not-open")
+                        append(',');append(ms);append(',');append(r.reason);append('\n')
+                    }
+                }
+                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                    type="text/csv";putExtra(Intent.EXTRA_TEXT,csv)
+                },"Portergebnisse teilen"))
+            },modifier=Modifier.fillMaxWidth()) { Text("Ergebnisse als CSV teilen") }
+        }
         if(results.isNotEmpty()) {
             val opened=results.count { it.open }
             Text("${results.size} geprüft · $opened offen · ${results.size-opened} geschlossen / nicht erreichbar",
@@ -129,7 +172,7 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
                 Text("${result.port}/TCP · ${if(result.open) "Offen" else "Nicht erreichbar"}",
                     style=MaterialTheme.typography.titleSmall,
                     color=if(result.open) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                Text(result.latencyMs?.let { "%.1f ms".format(Locale.US,it) } ?: result.reason,
+                Text((result.latencyMs?.let { "%.1f ms".format(Locale.US,it) } ?: result.reason) + " · " + (portServiceHints[result.port] ?: "Unbekannter Dienst"),
                     style=MaterialTheme.typography.bodySmall)
             }
         }
