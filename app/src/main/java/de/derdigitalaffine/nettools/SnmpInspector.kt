@@ -1,6 +1,8 @@
 package de.derdigitalaffine.nettools
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -152,10 +154,12 @@ internal fun snmpQuery(host:String,port:Int,community:String,oid:String,getNext:
         Text("OID-Abfrage über UDP. Community wird nur für die Anfrage verwendet und unverschlüsselt übertragen. Keine SNMP-SET-Befehle.",
             style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(host,{host=it},label={Text("SNMP-Gerät / IP")},singleLine=true,modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(portText,{portText=it},label={Text("UDP-Port")},singleLine=true,modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(portText,{portText=it},label={Text("UDP-Port")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         OutlinedTextField(community,{community=it},label={Text("Community (SNMPv2c)")},singleLine=true,
             visualTransformation=PasswordVisualTransformation(),modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(oid,{oid=it},label={Text("OID (z. B. sysDescr.0)")},singleLine=true,modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(oid,{oid=it},label={Text("OID (z. B. sysDescr.0)")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Ascii),
+            modifier=Modifier.fillMaxWidth())
         Button(onClick={
             busy=true;error=null;result=null
             scope.launch {
