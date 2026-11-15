@@ -72,11 +72,12 @@ internal fun DiagnosticsHub(
     val categories=listOf("Alle","Netzwerk","Monitoring","Sicherheit","Management")
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide=maxWidth>=760.dp
+        val spacious=maxWidth>=1100.dp
         val showCatalog=wide || selection==null
         Row(Modifier.fillMaxSize()) {
             if(showCatalog) {
                 Column(
-                    Modifier.then(if(wide) Modifier.width(if(maxWidth>=1100.dp) 360.dp else 300.dp) else Modifier.fillMaxSize())
+                    Modifier.then(if(wide) Modifier.width(if(spacious) 360.dp else 300.dp) else Modifier.fillMaxSize())
                         .padding(start=if(wide) 20.dp else 16.dp,end=if(wide) 12.dp else 16.dp)
                 ) {
                     Row(Modifier.fillMaxWidth().padding(top=8.dp,bottom=14.dp),
