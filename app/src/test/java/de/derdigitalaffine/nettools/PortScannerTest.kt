@@ -15,6 +15,14 @@ class PortScannerTest {
     @Test fun acceptsMaximumRange() {
         assertEquals(1024,parsePortList("1000-2023").size)
     }
+    @Test fun supportsMoreThan128SeparatePorts() {
+        val ports=(1000..1199).joinToString(",")
+        assertEquals(200,parsePortList(ports).size)
+    }
+    @Test fun rejectsVeryLongInput() {
+        try { parsePortList("1,".repeat(5000));fail("Overlong list accepted") }
+        catch (_:IllegalArgumentException) { }
+    }
     @Test fun rejectsOverLimit() {
         try { parsePortList("1000-2024");fail("Accepted 1025 ports") } catch (_:IllegalArgumentException) {}
     }
