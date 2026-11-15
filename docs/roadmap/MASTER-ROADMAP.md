@@ -185,3 +185,51 @@ Messbare Releases: 0 Kotlin-Compilefehler, 0 instrumentierte Critical Failures, 
 - TAKT agent workflow reference https://github.com/derdigitalaffine/takt-platform/blob/main/portal/docs/agent-workflows.md
 - TAKT task model routing https://github.com/derdigitalaffine/takt-platform/blob/main/portal/app/ai_task_routing.py
 - TAKT specialized agents https://github.com/derdigitalaffine/takt-platform/blob/main/portal/docs/law-ai-agents.md
+
+
+## 11. Erweiterung: Bluetooth Classic und Bluetooth Low Energy (BLE)
+
+Die App erhält einen eigenen Bereich **Funk & Sensorik** und eine Gerätebibliothek. Bluetooth-Suche ist keine passive Funk-Sniffer-Funktion und Android stellt ohne spezielle Hardware keine allgemeinen Bluetooth-Link-Layer-Rohpakete bereit.
+
+- **BT-001 Geräteübersicht:** Adapterstatus, Classic-Paired-Devices, unterstützte Profile (soweit OS-API), Name/Adresse nur mit Berechtigung, Filter/Favoriten/Herstellerkennung nach lokalem Katalog.
+- **BT-002 BLE Discovery:** zeitlich begrenzter kontrollierter LE-Scan mit RSSI, Scan Record, Service-UUIDs, Manufacturer-/Service-Data (hex/dekodiert), Anzeige rotierender/randomisierter Adressen ohne dauerhafte Identitätsbehauptung.
+- **BT-003 GATT Explorer:** Services/Characteristics/Descriptors, Properties, MTU, Read/Write mit Bestätigung, Notifications/Indications, Bonding- und Fehlerbehandlung; kein Zugriff ohne Verbindung/Berechtigung.
+- **BT-004 Funkdiagnose:** RSSI-Zeitreihe/Heatmap, Advertisements, Scannerate, Vergleichsmessungen, CSV/JSON-Export, klarer Hinweis auf Android-Scan-Throttling und nicht kalibrierte Entfernung aus RSSI.
+- **BT-005 Bluetooth Classic:** gekoppelte Geräte, RFCOMM/SPP-Terminal für kompatible Geräte, sichere Sessionverwaltung, explizites Connect/Disconnect; nicht jedes Bluetooth-Gerät stellt SPP bereit.
+- **BT-006 Protokoll-Decoder:** BLE GAP/GATT-Standardservices wie Battery/Device Info/Environmental Sensing, optional herstellerbezogene Decoder ohne erratene Werte; optional Bluetooth HCI-Snoop-Import als Offline-Analyse statt heimlichen Host-Stack-Mitschnitts.
+- **BT-007 Sicherheit:** Android 12+ `BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT`; auf Android 11 und älter Legacy-Bluetooth + Standortberechtigung nach OS-Anforderung. Da Funkmessungen mit Kartenposition korreliert werden können, Standortbezug offenlegen; bei aktivierter Geolokalisierung nicht `neverForLocation` behaupten. Scans nie still im Hintergrund.
+
+## 12. Erweiterung: GPS, GNSS, Sensorik und Karten
+
+**Geodaten-Stack:** MapLibre Native Android und **basemap.de** (nicht eine ungeprüfte `nasemap.de`-API). Amtliche basemap.de Style-JSON-URLs:
+- Farbe: `https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json`
+- Grau: `https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json`
+- Relief: `https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_top.json`
+- Dienstnutzung, Attribution, Cachebedingungen und Offline-Download unter den jeweils gültigen basemap.de-Bedingungen prüfen; Offlinekarten nicht ungeprüft herunterladen.
+
+### Geoposition und GPS/GNSS
+- **GEO-001:** präzise/grobe Standortberechtigungen, Position (WGS84), Höhe, Accuracy, Speed, Bearing, Zeit, Quelle, Providerstatus, Mock-location-Kennzeichnung wo API vorhanden; keine Positionsbehauptung bei fehlendem Fix.
+- **GEO-002:** GNSS Status, Satelliten je Konstellation, C/N0, genutzt im Fix, Azimut/Elevation, TTFF wo verfügbar; Rohmessungen/NMEA nur wenn Chipset/API/OS und Berechtigung es zulassen.
+- **GEO-003:** Standort-Track (bewusst Start/Stop), GPX/GeoJSON/KML-Export, Distanz, Richtung, Verlauf, sparsame Samplekonfiguration; lang laufendes Tracking nur als korrekt deklarierter Location Foreground Service.
+- **GEO-004:** Karten-Workbench: MapLibre, basemap.de Farbe/Grau/Relief, aktuelle Position, Messpunkte, Tracks, Network-Assets, geolokalisierte WLAN-/BLE-Messungen mit Einwilligung, Heatmap/Marker, Karten-Layer und Suchfunktion; Standortmeldungen niemals unaufgefordert an externe API.
+- **GEO-005:** Koordinaten-Toolbox WGS84 / Web Mercator, DMS/Dezimal, Distanz/Azimut, GeoJSON-Koordinatenvalidierung.
+
+### Smartphone-Sensoren
+- **SEN-001:** Android SensorManager-Gerätekatalog mit Sensorname/Typ, Vendor, Genauigkeit, Einheit, Stromverbrauch, ReportingMode; fehlende Sensoren klar als nicht vorhanden.
+- **SEN-002:** Liveplots für Accelerometer, Gyroskop, Magnetometer, Rotationsvektor, Barometer, Umgebungslicht, Nähe, relative Feuchte, Temperatur (falls vorhanden), Schrittzähler und weitere Gerätetypen – ausschließlich auf unterstützten Geräten.
+- **SEN-003:** Kalibrierungs- und Qualitätsstatus, Samplingrate/Batching, numerische CSV/JSON-Exporte, getrennte physikalische Einheiten.
+- **SEN-004:** Synchronisierte Netzwerk-/Funk-/GNSS-/Sensor-Messsession mit Zeitachsen, Standort-Datenschutzschalter und exportierbarer Messmetadaten-Provenienz.
+
+### Neue Meilensteine
+- **M1.5:** Bluetooth-/BLE-Permissions, BLE-Scan und Gerätekatalog, GPS/Location, Sensorliste, Karten-Workbench mit basemap.de, erstes Geräte-E2E.
+- **M3.5:** GATT Read/Write/Notify, RFCOMM-Konsole und Live-Sensorgraphen.
+- **M6.5:** Karten-Layer, georeferenzierte Messungen, GNSS-Detaildiagnose, Track- und GeoJSON-/GPX-Export.
+- **Release-Blocker:** keine Standort- oder Funkdaten an Dritte ohne transparente Zustimmung; kein angeblicher BLE-Paketsniffer über Standard-Android-Scanning.
+
+### Quellen
+- https://developer.android.com/develop/connectivity/bluetooth/bt-permissions
+- https://developer.android.com/develop/connectivity/bluetooth/ble/find-ble-devices
+- https://developer.android.com/reference/android/location/LocationManager
+- https://developer.android.com/guide/topics/sensors/sensors_overview
+- https://github.com/maplibre/maplibre-native/blob/main/platform/android/docs/artifacts.md
+- https://sgx.geodatenzentrum.de/web_public/gdz/dokumentation/deu/basemap.de_web_vektor.pdf
