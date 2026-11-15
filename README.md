@@ -8,8 +8,19 @@ gradle :app:assembleDebug
 ```
 Benötigt JDK 17, Android SDK 35 und Gradle 8.13. GitHub Actions baut eine installierbare Debug-APK als Workflow-Artefakt. Kein Release signiert; Debug-APK ist kein Qualitätsnachweis für alle Hardwarefunktionen.
 
-## Real implementierter Alpha-Umfang
-Netzwerkübersicht, TCP-Connect-Test, Hostnamenauflösung via Systemresolver, BLE-Discovery mit Permission und Stop, laufende Android-Sensorwerte, GPS-Position, MapLibre-Karte mit basemap.de und USB-Geräteliste. Weitere Roadmap-Funktionen sind **noch nicht implementiert**.
+## Implementierter Funktionsstand (0.2.0-alpha)
+- Adaptiver Compose-Workspace mit dunklem Design, Dashboard und Bottom Navigation (Telefon) / Navigation Rail (Tablet).
+- Netzwerkstatus mit DNS-Servern, aktiver Schnittstelle, IP-Adressen und Routen.
+- DNS-Hostnameauflösung mit dem Android-Systemresolver und TCP-Connect-Zeit mit Messverlauf. **Kein ICMP-Ping oder vollständiger DNS-RR-Browser.**
+- IPv4-CIDR-Rechner mit Netzmaske, Broadcast und Hostbereich sowie Unit-Tests.
+- BLE-Discovery mit Android-Berechtigung, RSSI und Service-UUID-Anzeige; noch kein GATT-Explorer.
+- Android-Sensor-Livewerte, GPS-Standortabfrage, USB-Geräteliste.
+- MapLibre-Kartenarbeitsplatz mit basemap.de-Farb-/Graustil und Zoomkontrollen.
+
+[UI-/UX-Standard](docs/UI-UX.md) · [Master-Roadmap](docs/roadmap/MASTER-ROADMAP.md)
+
+## APK
+Der GitHub-Actions-Workflow unter **Actions → Android APK** erzeugt bei jedem Push die Debug-APK als `nettools-debug-apk`-Artifact. Die CI prüft Compilation und Unit-Tests. Ein Debug-Build ersetzt **keine** Tests auf realen Android-Geräten, keinen Sicherheitsreview und keine Produktionssignatur. USB-Serial, LLDP, PCAP, grafisches Traceroute, ICMP, SmokePing und ASN/BGP stehen weiter auf der Roadmap.
 
 [Master-Roadmap](docs/roadmap/MASTER-ROADMAP.md)
 
