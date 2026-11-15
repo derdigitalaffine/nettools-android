@@ -45,10 +45,11 @@ fun encodeOid(oid:String):ByteArray {
     arcs.drop(2).forEach { out.write(base128(it)) }
     return tlv(6,out.toByteArray())
 }
-private fun snmpRequest(community:String,oid:String,id:Int):ByteArray {
+private fun snmpRequest(community:String,oid:String,id:Int,pduTag:Int):ByteArray {
+    require(pduTag==0xA0 || pduTag==0xA1)
     require(community.length in 1..128)
     val varbind=tlv(0x30,encodeOid(oid)+tlv(5,byteArrayOf()))
-    val pdu=tlv(0xA0,berInt(id)+berInt(0)+berInt(0)+tlv(0x30,varbind))
+    val pdu=tlv(pduTag,berInt(id)+berInt(0)+berInt(0)+tlv(0x30,varbind))
     return tlv(0x30,berInt(1)+tlv(4,community.toByteArray(StandardCharsets.UTF_8))+pdu)
 }
 private class BerReader(val bytes:ByteArray,var offset:Int=0) {
@@ -120,9 +121,9 @@ fun parseSnmpResponse(bytes:ByteArray,requestId:Int):SnmpValue {
     }
     return SnmpValue(decodeOid(oidBytes),tag,formatted)
 }
-private fun snmpGet(host:String,port:Int,community:String,oid:String):SnmpValue {
+internal fun snmpQuery(host:String,port:Int,community:String,oid:String,getNext:Boolean=false):SnmpValue {
     val id=SecureRandom().nextInt(Int.MAX_VALUE-1)+1
-    val payload=snmpRequest(community,oid,id)
+    val payload=snmpRequest(community,oid,id,if(getNext) 0xA1 else 0xA0)
     val address=InetAddress.getByName(host)
     return DatagramSocket().use { socket ->
         socket.soTimeout=3000
@@ -132,7 +133,7 @@ private fun snmpGet(host:String,port:Int,community:String,oid:String):SnmpValue 
         val packet=DatagramPacket(buffer,buffer.size)
         socket.receive(packet)
         val result=parseSnmpResponse(buffer.copyOf(packet.length),id)
-        require(result.oid==oid.trim().trimStart('.')) { "Antwort-OID stimmt nicht überein" }
+        if(!getNext) require(result.oid==oid.trim().trimStart('.')) { "Antwort-OID stimmt nicht überein" }
         result
     }
 }
@@ -158,7 +159,7 @@ private fun snmpGet(host:String,port:Int,community:String,oid:String):SnmpValue 
             busy=true;error=null;result=null
             scope.launch {
                 val response=withContext(Dispatchers.IO) {
-                    runCatching { snmpGet(host.trim(),portText.toInt(),community,oid) }
+                    runCatching { snmpQuery(host.trim(),portText.toInt(),community,oid) }
                 }
                 result=response.getOrNull()
                 error=response.exceptionOrNull()?.localizedMessage
