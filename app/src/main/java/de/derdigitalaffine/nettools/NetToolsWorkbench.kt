@@ -350,6 +350,9 @@ private fun Diagnostics(
                 Timeline(timings)
             }
         }
+        Panel("Live-Monitoring","TCP-Connect-Verfügbarkeit · Zeitreihen · CSV-Export") {
+            TcpMonitor()
+        }
         SubnetPanel()
         Notice("Die TCP-Verbindungszeit ist keine ICMP-Roundtrip-Zeit. DNS-Ergebnisse stammen aktuell vom Android-Systemresolver.")
     }
