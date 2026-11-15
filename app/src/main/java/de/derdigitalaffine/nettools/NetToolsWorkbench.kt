@@ -353,6 +353,9 @@ private fun Diagnostics(
         Panel("Live-Monitoring","TCP-Connect-Verfügbarkeit · Zeitreihen · CSV-Export") {
             TcpMonitor()
         }
+        Panel("TLS / HTTPS","Zertifikat, TLS-Version, Cipher und SHA-256-Fingerprint") {
+            TlsInspectorPanel(host)
+        }
         SubnetPanel()
         Notice("Die TCP-Verbindungszeit ist keine ICMP-Roundtrip-Zeit. DNS-Ergebnisse stammen aktuell vom Android-Systemresolver.")
     }
