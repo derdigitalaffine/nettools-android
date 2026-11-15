@@ -44,17 +44,18 @@ fun identifyOpenPortService(host:String,port:Int):ServiceIdentification {
     require(supportsSafeServiceProbe(port)) { "Für diesen Port ist kein sicherer Standard-Probe definiert" }
     return try {
         if(port in tlsProbePorts) {
-            val socket=(SSLSocketFactory.getDefault() as SSLSocketFactory)
-                .createSocket() as SSLSocket
-            socket.use {
-                it.soTimeout=1500
-                it.connect(InetSocketAddress(host,port),1500)
-                val params:SSLParameters=it.sslParameters
-                params.endpointIdentificationAlgorithm="HTTPS"
-                it.sslParameters=params
-                it.startHandshake()
-                ServiceIdentification(port,"TLS",
-                    "Zertifikat geprüft · "+it.session.protocol+" · "+it.session.cipherSuite)
+            Socket().use { tcp ->
+                tcp.connect(InetSocketAddress(host,port),1500)
+                val factory=SSLSocketFactory.getDefault() as SSLSocketFactory
+                (factory.createSocket(tcp,host,port,false) as SSLSocket).use { tls ->
+                    tls.soTimeout=1500
+                    val params:SSLParameters=tls.sslParameters
+                    params.endpointIdentificationAlgorithm="HTTPS"
+                    tls.sslParameters=params
+                    tls.startHandshake()
+                    ServiceIdentification(port,"TLS",
+                        "Zertifikat/Hostname geprüft · "+tls.session.protocol+" · "+tls.session.cipherSuite)
+                }
             }
         } else {
             Socket().use { socket ->
