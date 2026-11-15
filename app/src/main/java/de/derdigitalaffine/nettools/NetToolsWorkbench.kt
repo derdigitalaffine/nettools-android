@@ -8,6 +8,7 @@ import android.hardware.usb.UsbManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,13 +41,6 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.Locale
-
-private val Accent = Color(0xFF17A2A4)
-private val Ink = Color(0xFFE9F1F4)
-private val Muted = Color(0xFF9BADB9)
-private val Surface = Color(0xFF152530)
-private val Base = Color(0xFF0B1822)
-private val Nav = Color(0xFF101F29)
 
 private data class Page(val title:String, val label:String, val symbol: androidx.compose.ui.graphics.vector.ImageVector)
 private val pages = listOf(
@@ -87,18 +81,15 @@ fun NetToolsWorkbench(
         }
         requestedPermissionFor=null
     }
-    val theme = darkColorScheme(
-        primary=Accent, onPrimary=Base, secondary=Accent, background=Base,
-        onBackground=Ink, surface=Surface, onSurface=Ink, surfaceVariant=Nav, onSurfaceVariant=Muted,
-        outline=Color(0xFF344856), error=Color(0xFFFF7F88)
-    )
-    MaterialTheme(colorScheme=theme) {
-        BoxWithConstraints(Modifier.fillMaxSize().background(Base).safeDrawingPadding()) {
+    var darkTheme by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
+    NetToolsTheme(dark=darkTheme) {
+        BoxWithConstraints(Modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
             val wide = maxWidth >= 740.dp
             val select: (Int)->Unit = { selected = it }
             val content: @Composable () -> Unit = {
                 Column(Modifier.fillMaxSize()) {
-                    Header(pages[selected].title)
+                    Header(pages[selected].title,darkTheme,{darkTheme=!darkTheme})
                     when(selected) {
                         0 -> Overview(
                             network=network, bleCount=bleRows.size, sensorCount=getSensors().size,
@@ -156,9 +147,9 @@ fun NetToolsWorkbench(
             }
             if(wide) {
                 Row(Modifier.fillMaxSize()) {
-                    NavigationRail(containerColor=Nav, contentColor=Ink) {
+                    NavigationRail(containerColor=MaterialTheme.colorScheme.surfaceContainerLow, contentColor=MaterialTheme.colorScheme.onSurface) {
                         Spacer(Modifier.height(18.dp))
-                        Icon(Icons.Outlined.Router, contentDescription=null, tint=Accent, modifier=Modifier.size(30.dp))
+                        Icon(Icons.Outlined.Router, contentDescription=null, tint=MaterialTheme.colorScheme.primary, modifier=Modifier.size(30.dp))
                         Spacer(Modifier.height(30.dp))
                         pages.forEachIndexed { index,page ->
                             NavigationRailItem(
@@ -168,12 +159,12 @@ fun NetToolsWorkbench(
                             )
                         }
                     }
-                    VerticalDivider(color=Color(0xFF29404A))
+                    VerticalDivider(color=MaterialTheme.colorScheme.outlineVariant)
                     Box(Modifier.weight(1f)) { content() }
                 }
             } else {
-                Scaffold(containerColor=Base, contentWindowInsets=WindowInsets(0,0,0,0), bottomBar={
-                    NavigationBar(containerColor=Nav) {
+                Scaffold(containerColor=MaterialTheme.colorScheme.background, contentWindowInsets=WindowInsets(0,0,0,0), bottomBar={
+                    NavigationBar(containerColor=MaterialTheme.colorScheme.surfaceContainerLow) {
                         pages.forEachIndexed { index,page ->
                             NavigationBarItem(
                                 selected=selected==index, onClick={selected=index},
@@ -192,35 +183,44 @@ fun NetToolsWorkbench(
 @Composable private fun rememberSaveableIndex(): MutableState<Int> = androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
 
 @Composable
-private fun Header(title:String) {
-    Row(
-        modifier=Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=18.dp),
-        verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.SpaceBetween
-    ) {
-        Column {
-            Text("NETTOOLS  /  WORKSPACE",style=MaterialTheme.typography.labelSmall,
-                fontWeight=FontWeight.Bold,color=Accent)
-            Text(title,style=MaterialTheme.typography.headlineSmall,
-                fontWeight=FontWeight.Bold,maxLines=1,overflow=TextOverflow.Ellipsis)
-        }
-        Surface(shape=RoundedCornerShape(14.dp),color=Surface) {
-            Row(Modifier.padding(horizontal=12.dp,vertical=9.dp),verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Shield,contentDescription=null,tint=Accent,modifier=Modifier.size(17.dp))
-                Spacer(Modifier.width(7.dp))
-                Text("LOCAL",style=MaterialTheme.typography.labelSmall,color=Ink,fontWeight=FontWeight.Bold)
+private fun Header(title:String,dark:Boolean,onToggleTheme:()->Unit) {
+    Surface(color=MaterialTheme.colorScheme.background) {
+        Row(
+            modifier=Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=10.dp),
+            verticalAlignment=Alignment.CenterVertically
+        ) {
+            Surface(shape=RoundedCornerShape(16.dp),color=MaterialTheme.colorScheme.primaryContainer) {
+                Box(Modifier.size(48.dp),contentAlignment=Alignment.Center) {
+                    Icon(Icons.Outlined.Hub,contentDescription=null,
+                        tint=MaterialTheme.colorScheme.onPrimaryContainer,modifier=Modifier.size(26.dp))
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("NETTOOLS  /  ANDROID",style=MaterialTheme.typography.labelSmall,
+                    fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.primary)
+                Text(title,style=MaterialTheme.typography.titleLarge,
+                    fontWeight=FontWeight.Bold,maxLines=1,overflow=TextOverflow.Ellipsis)
+            }
+            IconButton(onClick=onToggleTheme,modifier=Modifier.size(48.dp)) {
+                Icon(if(dark) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                    contentDescription=if(dark) "Helles Design aktivieren" else "Dunkles Design aktivieren",
+                    tint=MaterialTheme.colorScheme.onSurface)
             }
         }
     }
+    HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.5f))
 }
 
 @Composable
 private fun Panel(title:String, subtitle:String?=null, modifier:Modifier=Modifier, body:@Composable ColumnScope.()->Unit) {
-    Surface(modifier=modifier.fillMaxWidth(),color=Surface,shape=RoundedCornerShape(22.dp)) {
+    Surface(modifier=modifier.fillMaxWidth(),color=MaterialTheme.colorScheme.surfaceContainerLow,
+        shape=RoundedCornerShape(22.dp),border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.5f))) {
         Column(Modifier.padding(18.dp)) {
             Text(title,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
             if(subtitle!=null) {
                 Spacer(Modifier.height(4.dp))
-                Text(subtitle,style=MaterialTheme.typography.bodySmall,color=Muted)
+                Text(subtitle,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(14.dp))
             body()
@@ -228,9 +228,10 @@ private fun Panel(title:String, subtitle:String?=null, modifier:Modifier=Modifie
     }
 }
 @Composable private fun Metric(label:String,value:String,modifier:Modifier=Modifier) {
-    Surface(modifier=modifier,color=Nav,shape=RoundedCornerShape(16.dp)) {
+    Surface(modifier=modifier.heightIn(min=78.dp),color=MaterialTheme.colorScheme.surfaceContainer,
+        shape=RoundedCornerShape(16.dp)) {
         Column(Modifier.padding(14.dp)) {
-            Text(label,style=MaterialTheme.typography.labelMedium,color=Muted)
+            Text(label,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(6.dp))
             Text(value,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold,maxLines=2)
         }
@@ -239,15 +240,16 @@ private fun Panel(title:String, subtitle:String?=null, modifier:Modifier=Modifie
 @Composable private fun Section(label:String,detail:String) {
     Spacer(Modifier.height(13.dp))
     Text(label,style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.Bold)
-    Text(detail,style=MaterialTheme.typography.bodySmall,color=Muted)
+    Text(detail,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(8.dp))
 }
 @Composable private fun Notice(text:String) {
-    Surface(color=Nav,shape=RoundedCornerShape(14.dp)) {
+    Surface(color=MaterialTheme.colorScheme.secondaryContainer.copy(alpha=0.38f),
+        shape=RoundedCornerShape(14.dp)) {
         Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.Top) {
-            Icon(Icons.Outlined.Info,contentDescription=null,tint=Accent,modifier=Modifier.size(18.dp))
+            Icon(Icons.Outlined.Info,contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(18.dp))
             Spacer(Modifier.width(10.dp))
-            Text(text,style=MaterialTheme.typography.bodySmall,color=Muted)
+            Text(text,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -261,12 +263,12 @@ private fun Overview(network:NetworkView,bleCount:Int,sensorCount:Int,open:(Int)
     WorkspaceList {
         Panel("Netzwerkstatus","Aktive Android-Verbindung · live bei Aktualisierung") {
             Row(verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.WifiTethering,contentDescription=null,tint=Accent,
+                Icon(Icons.Outlined.WifiTethering,contentDescription=null,tint=MaterialTheme.colorScheme.primary,
                     modifier=Modifier.size(36.dp))
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(network.transport,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
-                    Text(network.interfaceName,color=Muted)
+                    Text(network.interfaceName,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 FilledTonalIconButton(onClick=refresh) {
                     Icon(Icons.Outlined.Refresh,contentDescription="Netzwerk aktualisieren")
@@ -294,11 +296,11 @@ private fun Overview(network:NetworkView,bleCount:Int,sensorCount:Int,open:(Int)
                     verticalAlignment=Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(name,fontWeight=FontWeight.SemiBold)
-                        Text(desc,color=Muted,style=MaterialTheme.typography.bodySmall)
+                        Text(desc,color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
                     }
-                    Icon(Icons.Outlined.ChevronRight,contentDescription="Öffnen",tint=Accent)
+                    Icon(Icons.Outlined.ChevronRight,contentDescription="Öffnen",tint=MaterialTheme.colorScheme.primary)
                 }
-                if(index!=shortcuts.last().third) HorizontalDivider(color=Color(0xFF2C404B))
+                if(index!=shortcuts.last().third) HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
             }
         }
         Notice("Alpha-Ausbau: Ping, Traceroute, Paketmitschnitt, LLDP und SmokePing sind Roadmap-Funktionen und werden hier nicht als verfügbar dargestellt.")
@@ -402,7 +404,7 @@ private fun SubnetPanel() {
             if(result.prefix>=31) {
                 Spacer(Modifier.height(8.dp))
                 Text("/31 verwendet zwei Point-to-Point-Adressen, /32 eine einzelne Hostadresse.",
-                    style=MaterialTheme.typography.bodySmall,color=Muted)
+                    style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }.onFailure {
             Text(it.message ?: "Ungültige Adresse",color=MaterialTheme.colorScheme.error,
@@ -414,18 +416,19 @@ private fun SubnetPanel() {
 @Composable private fun Timeline(values:List<Float>) {
     val min=values.minOrNull() ?: 0f
     val max=(values.maxOrNull() ?: 1f).coerceAtLeast(min+1f)
-    Canvas(Modifier.fillMaxWidth().height(125.dp).background(Nav, RoundedCornerShape(12.dp)).padding(14.dp)) {
+    val graphAccent=MaterialTheme.colorScheme.primary
+    Canvas(Modifier.fillMaxWidth().height(125.dp).background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp)).padding(14.dp)) {
         val path=Path()
         values.forEachIndexed { i,value ->
             val x= if(values.size==1) size.width/2f else i.toFloat()/(values.size-1)*size.width
             val y=size.height-(value-min)/(max-min)*size.height
             if(i==0) path.moveTo(x,y) else path.lineTo(x,y)
         }
-        drawPath(path,Accent,style=Stroke(width=3.dp.toPx(),cap=StrokeCap.Round))
+        drawPath(path,graphAccent,style=Stroke(width=3.dp.toPx(),cap=StrokeCap.Round))
         values.forEachIndexed { i,value ->
             val x=if(values.size==1) size.width/2f else i.toFloat()/(values.size-1)*size.width
             val y=size.height-(value-min)/(max-min)*size.height
-            drawCircle(Accent,radius=3.dp.toPx(),center=Offset(x,y))
+            drawCircle(graphAccent,radius=3.dp.toPx(),center=Offset(x,y))
         }
     }
 }
@@ -434,11 +437,11 @@ private fun SubnetPanel() {
     WorkspaceList {
         Panel("BLE-Scanner","Bluetooth Low Energy · Advertisement-Discovery") {
             Row(verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.BluetoothSearching,contentDescription=null,tint=Accent,modifier=Modifier.size(36.dp))
+                Icon(Icons.Outlined.BluetoothSearching,contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(36.dp))
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(if(scanning) "Scan aktiv" else "Bereit zum Scannen",fontWeight=FontWeight.Bold)
-                    Text("${rows.size} erkannte Adressen",style=MaterialTheme.typography.bodySmall,color=Muted)
+                    Text("${rows.size} erkannte Adressen",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -450,14 +453,14 @@ private fun SubnetPanel() {
             Notice("Bluetooth-Scan und Standortdaten benötigen Android-Freigaben. Es werden keine Geräte automatisch verbunden.")
         }
         Panel("Gefundene Geräte","MAC/zufällige Adresse, RSSI und annoncierte Service-UUIDs") {
-            if(rows.isEmpty()) Text("Noch keine BLE-Geräte entdeckt.",color=Muted)
+            if(rows.isEmpty()) Text("Noch keine BLE-Geräte entdeckt.",color=MaterialTheme.colorScheme.onSurfaceVariant)
             rows.forEachIndexed { index,row ->
                 Row(Modifier.fillMaxWidth().padding(vertical=10.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Bluetooth,contentDescription=null,tint=Accent)
+                    Icon(Icons.Outlined.Bluetooth,contentDescription=null,tint=MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(11.dp))
                     Text(row,modifier=Modifier.weight(1f),style=MaterialTheme.typography.bodySmall)
                 }
-                if(index<rows.lastIndex) HorizontalDivider(color=Color(0xFF2C404B))
+                if(index<rows.lastIndex) HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
             }
         }
         Notice("Ein BLE-Scan ist kein Bluetooth-Paketsniffer. GATT-Inspektion, Bonding und Classic-RFCOMM befinden sich noch in der Roadmap.")
@@ -471,7 +474,7 @@ private fun SensorsScreen(
 ) {
     WorkspaceList {
         Panel("GNSS & Position","Standortinformation nur auf ausdrückliche Anforderung") {
-            Icon(Icons.Outlined.MyLocation,contentDescription=null,tint=Accent,modifier=Modifier.size(36.dp))
+            Icon(Icons.Outlined.MyLocation,contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(36.dp))
             Spacer(Modifier.height(10.dp))
             Text(position,style=MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(12.dp))
@@ -492,11 +495,11 @@ private fun SensorsScreen(
             }
             Spacer(Modifier.height(10.dp))
             if(sensors.isEmpty()) {
-                Text("Live-Messung noch nicht gestartet.",color=Muted)
+                Text("Live-Messung noch nicht gestartet.",color=MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 sensors.toSortedMap().forEach { (name,values) ->
                     Text(name,fontWeight=FontWeight.SemiBold)
-                    Text(values,color=Muted,style=MaterialTheme.typography.bodySmall)
+                    Text(values,color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(10.dp))
                 }
             }
@@ -517,10 +520,10 @@ private fun UsbScreen(ctx:Context,refresh:Int,onRefresh:()->Unit) {
                 }
             }
             Spacer(Modifier.height(12.dp))
-            if(devices.isEmpty()) Text("Keine USB-Geräte erkannt. Adapter verbinden und aktualisieren.",color=Muted)
+            if(devices.isEmpty()) Text("Keine USB-Geräte erkannt. Adapter verbinden und aktualisieren.",color=MaterialTheme.colorScheme.onSurfaceVariant)
             devices.forEach {
                 Text("VID %04X · PID %04X".format(it.vendorId,it.productId),fontWeight=FontWeight.Bold)
-                Text("${it.interfaceCount} USB-Interface(s) · Klasse ${it.deviceClass}",color=Muted)
+                Text("${it.interfaceCount} USB-Interface(s) · Klasse ${it.deviceClass}",color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(10.dp))
             }
         }
