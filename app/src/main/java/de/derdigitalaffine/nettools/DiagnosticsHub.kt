@@ -1,5 +1,6 @@
 package de.derdigitalaffine.nettools
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -78,6 +79,8 @@ internal fun DiagnosticsHub(
         val wide=maxWidth>=760.dp
         val spacious=maxWidth>=1100.dp
         val showCatalog=wide || selection==null
+        val highlighted=selection ?: if(wide) "quick" else null
+        BackHandler(enabled=!wide && selection!=null) { selection=null }
         Row(Modifier.fillMaxSize()) {
             if(showCatalog) {
                 Column(
@@ -137,7 +140,7 @@ internal fun DiagnosticsHub(
                             verticalArrangement=Arrangement.spacedBy(9.dp)) {
                             items(shown,key={it.id}) { tool ->
                                 DiagnosticToolRow(
-                                    tool=tool,selected=selection==tool.id,favorite=tool.id in favorites,
+                                    tool=tool,selected=highlighted==tool.id,favorite=tool.id in favorites,
                                     onSelect={selection=tool.id},
                                     onFavorite={
                                         val changed=favorites.toMutableSet()
