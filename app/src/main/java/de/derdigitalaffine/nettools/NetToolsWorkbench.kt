@@ -86,6 +86,7 @@ fun NetToolsWorkbench(
         BoxWithConstraints(Modifier.fillMaxSize()
             .background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
             val wide = maxWidth >= 740.dp
+            val expanded = maxWidth >= 1160.dp
             val select: (Int)->Unit = { selected = it }
             val content: @Composable () -> Unit = {
                 Column(Modifier.fillMaxSize()) {
@@ -145,17 +146,55 @@ fun NetToolsWorkbench(
                     }
                 }
             }
-            if(wide) {
+            if(expanded) {
                 Row(Modifier.fillMaxSize()) {
-                    NavigationRail(containerColor=MaterialTheme.colorScheme.surfaceContainerLow, contentColor=MaterialTheme.colorScheme.onSurface) {
+                    Surface(Modifier.width(250.dp).fillMaxHeight(),
+                        color=MaterialTheme.colorScheme.surfaceContainerLow) {
+                        Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=18.dp)) {
+                            Row(Modifier.padding(start=12.dp,bottom=20.dp),
+                                verticalAlignment=Alignment.CenterVertically) {
+                                Icon(Icons.Outlined.Hub,contentDescription=null,
+                                    tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(30.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Column {
+                                    Text("NETTOOLS",style=MaterialTheme.typography.titleMedium,
+                                        color=MaterialTheme.colorScheme.onSurface)
+                                    Text("Netzwerk-Workbench",style=MaterialTheme.typography.labelSmall,
+                                        color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            pages.forEachIndexed { index,page ->
+                                NavigationDrawerItem(
+                                    label={Text(page.title,maxLines=1,overflow=TextOverflow.Ellipsis)},
+                                    selected=selected==index,onClick={selected=index},
+                                    icon={Icon(page.symbol,contentDescription=null)},
+                                    modifier=Modifier.padding(vertical=3.dp)
+                                )
+                            }
+                            Spacer(Modifier.weight(1f))
+                            HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                            Text("LOKALE NETZWERKTOOLS",
+                                Modifier.padding(horizontal=14.dp,vertical=14.dp),
+                                color=MaterialTheme.colorScheme.onSurfaceVariant,
+                                style=MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    VerticalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                    Box(Modifier.weight(1f)) { content() }
+                }
+            } else if(wide) {
+                Row(Modifier.fillMaxSize()) {
+                    NavigationRail(containerColor=MaterialTheme.colorScheme.surfaceContainerLow,
+                        contentColor=MaterialTheme.colorScheme.onSurface) {
                         Spacer(Modifier.height(18.dp))
-                        Icon(Icons.Outlined.Router, contentDescription=null, tint=MaterialTheme.colorScheme.primary, modifier=Modifier.size(30.dp))
-                        Spacer(Modifier.height(30.dp))
+                        Icon(Icons.Outlined.Hub,contentDescription=null,
+                            tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(30.dp))
+                        Spacer(Modifier.height(25.dp))
                         pages.forEachIndexed { index,page ->
                             NavigationRailItem(
-                                selected=selected==index, onClick={selected=index},
-                                icon={Icon(page.symbol,contentDescription=null)}, label={Text(page.label)},
-                                alwaysShowLabel=true
+                                selected=selected==index,onClick={selected=index},
+                                icon={Icon(page.symbol,contentDescription=null)},
+                                label={Text(page.label)},alwaysShowLabel=true
                             )
                         }
                     }
@@ -163,19 +202,20 @@ fun NetToolsWorkbench(
                     Box(Modifier.weight(1f)) { content() }
                 }
             } else {
-                Scaffold(containerColor=MaterialTheme.colorScheme.background, contentWindowInsets=WindowInsets(0,0,0,0), bottomBar={
-                    NavigationBar(containerColor=MaterialTheme.colorScheme.surfaceContainerLow) {
-                        pages.forEachIndexed { index,page ->
-                            NavigationBarItem(
-                                selected=selected==index, onClick={selected=index},
-                                icon={Icon(page.symbol, contentDescription=page.label)},
-                                label={Text(page.label, maxLines=1)}, alwaysShowLabel=true
-                            )
+                Scaffold(containerColor=MaterialTheme.colorScheme.background,
+                    contentWindowInsets=WindowInsets(0,0,0,0),bottomBar={
+                        NavigationBar(containerColor=MaterialTheme.colorScheme.surfaceContainerLow) {
+                            pages.forEachIndexed { index,page ->
+                                NavigationBarItem(
+                                    selected=selected==index,onClick={selected=index},
+                                    icon={Icon(page.symbol,contentDescription=page.label)},
+                                    label={Text(page.label,maxLines=1)},alwaysShowLabel=true
+                                )
+                            }
                         }
+                    }) { padding ->
+                        Box(Modifier.fillMaxSize().padding(padding)) { content() }
                     }
-                }) { padding ->
-                    Box(Modifier.fillMaxSize().padding(padding)) { content() }
-                }
             }
         }
     }
