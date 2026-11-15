@@ -2,6 +2,8 @@ package de.derdigitalaffine.nettools
 
 import android.content.Context
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -69,7 +71,8 @@ fun TlsInspectorPanel(defaultHost:String) {
         Text("Prüft den echten TLS-Handshake mit Systemvertrauen und Hostname-Verifikation.",
             style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(host,{host=it},label={Text("TLS-Hostname")},singleLine=true,modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(port,{port=it},label={Text("Port")},singleLine=true,modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(port,{port=it},label={Text("Port")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         Button(onClick={
             val h=host.trim()
             val p=port.toIntOrNull() ?: return@Button
