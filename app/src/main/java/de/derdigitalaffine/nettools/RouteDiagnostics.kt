@@ -3,6 +3,7 @@ package de.derdigitalaffine.nettools
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
@@ -41,8 +42,8 @@ private fun probeHop(host:String,ttl:Int):RouteHop {
 }
 @Composable fun RouteDiagnostics() {
     val scope=rememberCoroutineScope()
-    var host by remember { mutableStateOf("1.1.1.1") }
-    var hopsText by remember { mutableStateOf("12") }
+    var host by rememberSaveable { mutableStateOf("1.1.1.1") }
+    var hopsText by rememberSaveable { mutableStateOf("12") }
     var running by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
     val hops=remember { mutableStateListOf<RouteHop>() }
