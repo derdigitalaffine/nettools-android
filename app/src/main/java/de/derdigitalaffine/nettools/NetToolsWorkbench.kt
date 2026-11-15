@@ -93,7 +93,7 @@ fun NetToolsWorkbench(
         outline=Color(0xFF344856), error=Color(0xFFFF7F88)
     )
     MaterialTheme(colorScheme=theme) {
-        BoxWithConstraints(Modifier.fillMaxSize().background(Base)) {
+        BoxWithConstraints(Modifier.fillMaxSize().background(Base).safeDrawingPadding()) {
             val wide = maxWidth >= 740.dp
             val select: (Int)->Unit = { selected = it }
             val content: @Composable () -> Unit = {
@@ -172,7 +172,7 @@ fun NetToolsWorkbench(
                     Box(Modifier.weight(1f)) { content() }
                 }
             } else {
-                Scaffold(containerColor=Base, bottomBar={
+                Scaffold(containerColor=Base, contentWindowInsets=WindowInsets(0,0,0,0), bottomBar={
                     NavigationBar(containerColor=Nav) {
                         pages.forEachIndexed { index,page ->
                             NavigationBarItem(
