@@ -77,8 +77,15 @@ fun NetToolsWorkbench(
     var network by remember { mutableStateOf(networkSnapshot(ctx)) }
     var usbRefresh by remember { mutableIntStateOf(0) }
     var sensorActive by remember { mutableStateOf(false) }
-    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        // Permission prompts are intentionally not interpreted as permission to start scanning.
+    var requestedPermissionFor by remember { mutableStateOf<String?>(null) }
+    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+        if(grants.values.isNotEmpty() && grants.values.all { it }) {
+            when(requestedPermissionFor) {
+                "ble" -> startBle()
+                "gps" -> startLocation()
+            }
+        }
+        requestedPermissionFor=null
     }
     val theme = darkColorScheme(
         primary=Accent, onPrimary=Base, secondary=Accent, background=Base,
@@ -129,7 +136,7 @@ fun NetToolsWorkbench(
                                 val needed= if(Build.VERSION.SDK_INT>=31)
                                     arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
                                 else arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-                                if(needed.all(ctx::permissionOk)) startBle() else permissions.launch(needed)
+                                if(needed.all(ctx::permissionOk)) startBle() else { requestedPermissionFor="ble"; permissions.launch(needed) }
                             }, stop=stopBle
                         )
                         3 -> SensorsScreen(
@@ -138,7 +145,7 @@ fun NetToolsWorkbench(
                             locate={
                                 if (ctx.permissionOk(Manifest.permission.ACCESS_COARSE_LOCATION) ||
                                     ctx.permissionOk(Manifest.permission.ACCESS_FINE_LOCATION)) startLocation()
-                                else permissions.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))
+                                else { requestedPermissionFor="gps"; permissions.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)) }
                             },
                             openMap={ctx.startActivity(Intent(ctx, MapActivity::class.java))},
                             start={sensorActive=true;startSensors()}, stop={sensorActive=false;stopSensors()}
