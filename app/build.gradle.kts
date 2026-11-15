@@ -31,5 +31,6 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("org.maplibre.gl:android-sdk-opengl:13.5.4")
+    implementation("org.snmp4j:snmp4j:3.13.2")
     testImplementation("junit:junit:4.13.2")
 }
