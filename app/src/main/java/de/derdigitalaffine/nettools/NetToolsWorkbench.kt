@@ -353,6 +353,9 @@ private fun Diagnostics(
         Panel("Live-Monitoring","TCP-Connect-Verfügbarkeit · Zeitreihen · CSV-Export") {
             TcpMonitor()
         }
+        Panel("TCP-Portprüfung","Gezielte Portlisten und Bereiche · max. 128 Ports") {
+            PortScanner()
+        }
         Panel("ICMP Ping","Echte Echo-Anfragen mit RTT und Verlustquote") {
             IcmpDiagnostics()
         }
