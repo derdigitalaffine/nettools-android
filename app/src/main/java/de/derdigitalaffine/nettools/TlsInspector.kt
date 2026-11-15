@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -58,8 +59,8 @@ fun inspectTls(host:String,port:Int):TlsResult {
 @Composable
 fun TlsInspectorPanel(defaultHost:String) {
     val scope=rememberCoroutineScope()
-    var host by remember { mutableStateOf(defaultHost) }
-    var port by remember { mutableStateOf("443") }
+    var host by rememberSaveable { mutableStateOf(defaultHost) }
+    var port by rememberSaveable { mutableStateOf("443") }
     var loading by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<TlsResult?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
