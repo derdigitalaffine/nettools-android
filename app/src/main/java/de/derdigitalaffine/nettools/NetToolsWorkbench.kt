@@ -310,78 +310,72 @@ private fun Diagnostics(
     host:String,setHost:(String)->Unit,port:String,setPort:(String)->Unit,
     output:String,timings:List<Float>,running:Boolean,dns:()->Unit,tcp:()->Unit
 ) {
-    WorkspaceList {
-        Panel("Zielsystem","DNS-Auflösung und TCP-Connect über den aktuellen Android-Netzwerkpfad") {
-            OutlinedTextField(host,setHost,label={Text("Hostname oder IP-Adresse")},modifier=Modifier.fillMaxWidth(),
-                singleLine=true,shape=RoundedCornerShape(14.dp),placeholder={Text("example.org")})
-            Spacer(Modifier.height(10.dp))
-            OutlinedTextField(port,setPort,label={Text("TCP-Port")},modifier=Modifier.fillMaxWidth(),
-                singleLine=true,shape=RoundedCornerShape(14.dp))
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                Button(onClick=dns,enabled=!running && host.isNotBlank(),modifier=Modifier.weight(1f)) {
-                    Icon(Icons.Outlined.Dns,contentDescription=null,modifier=Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp)); Text("DNS")
-                }
-                Button(onClick=tcp,enabled=!running && host.isNotBlank() && port.toIntOrNull() in 1..65535,
-                    modifier=Modifier.weight(1f)) {
-                    Icon(Icons.Outlined.NetworkCheck,contentDescription=null,modifier=Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp)); Text("TCP")
-                }
-            }
-            if(running) {
-                Spacer(Modifier.height(12.dp))
-                LinearProgressIndicator(Modifier.fillMaxWidth())
-            }
-        }
-        Panel("Diagnoseausgabe","Ergebnisse des letzten Messlaufs") {
-            Text(output,color=Ink,style=MaterialTheme.typography.bodyMedium)
-        }
-        Panel("Verbindungszeiten","Erfolgreiche TCP-Connect-Messungen · Millisekunden") {
-            if(timings.isEmpty()) {
-                Notice("Noch keine TCP-Messwerte. Starte einen TCP-Test, um den Verlauf zu sehen.")
-            } else {
+    DiagnosticsHub { id ->
+        when(id) {
+            "quick" -> {
+                Text("Schnelltest",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(host,setHost,label={Text("Hostname oder IP-Adresse")},
+                    modifier=Modifier.fillMaxWidth(),singleLine=true,
+                    shape=RoundedCornerShape(14.dp),placeholder={Text("example.org")})
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(port,setPort,label={Text("TCP-Port")},
+                    modifier=Modifier.fillMaxWidth(),singleLine=true,shape=RoundedCornerShape(14.dp))
+                Spacer(Modifier.height(14.dp))
                 Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                    Metric("Letzte",formatMs(timings.last()),Modifier.weight(1f))
-                    Metric("Minimum",formatMs(timings.min()),Modifier.weight(1f))
-                    Metric("Maximum",formatMs(timings.max()),Modifier.weight(1f))
+                    Button(onClick=dns,enabled=!running && host.isNotBlank(),
+                        modifier=Modifier.weight(1f).heightIn(min=48.dp)) {
+                        Icon(Icons.Outlined.Dns,contentDescription=null,modifier=Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("DNS")
+                    }
+                    Button(onClick=tcp,enabled=!running && host.isNotBlank() && port.toIntOrNull() in 1..65535,
+                        modifier=Modifier.weight(1f).heightIn(min=48.dp)) {
+                        Icon(Icons.Outlined.NetworkCheck,contentDescription=null,modifier=Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("TCP")
+                    }
                 }
-                Spacer(Modifier.height(15.dp))
-                Timeline(timings)
+                if(running) {
+                    Spacer(Modifier.height(12.dp))
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
+                Spacer(Modifier.height(18.dp))
+                HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                Spacer(Modifier.height(12.dp))
+                Text("Letztes Ergebnis",style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.SemiBold)
+                Spacer(Modifier.height(6.dp))
+                Text(output,style=MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(16.dp))
+                Text("Verbindungszeiten",style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.SemiBold)
+                Spacer(Modifier.height(10.dp))
+                if(timings.isEmpty()) {
+                    Notice("Noch keine TCP-Messwerte. Eine Messung erstellt einen Verlauf.")
+                } else {
+                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        Metric("Letzte",formatMs(timings.last()),Modifier.weight(1f))
+                        Metric("Min",formatMs(timings.min()),Modifier.weight(1f))
+                        Metric("Max",formatMs(timings.max()),Modifier.weight(1f))
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Timeline(timings)
+                }
+                Spacer(Modifier.height(10.dp))
+                Text("TCP-Connect ist keine ICMP-Roundtrip-Messung.",
+                    style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            "monitor" -> TcpMonitor()
+            "ports" -> PortScanner()
+            "nmap" -> NmapXmlImportPanel()
+            "snmp" -> SnmpInspector()
+            "walk" -> SnmpWalkPanel()
+            "snmpv3" -> SnmpV3Inspector()
+            "ping" -> IcmpDiagnostics()
+            "route" -> RouteDiagnostics()
+            "dns" -> DnsExplorer()
+            "tls" -> TlsInspectorPanel(host)
+            "subnet" -> SubnetPanel()
         }
-        Panel("Live-Monitoring","TCP-Connect-Verfügbarkeit · Zeitreihen · CSV-Export") {
-            TcpMonitor()
-        }
-        Panel("Nmap-orientierter TCP-Scan","Non-Root TCP Connect · Scanprofile · bis 1024 Ports · CSV") {
-            PortScanner()
-        }
-        Panel("Nmap-XML-Berichte","Externe Nmap-Ergebnisse sicher importieren und auswerten") {
-            NmapXmlImportPanel()
-        }
-        Panel("SNMP-Geräteanalyse","SNMPv2c Read-only · OID-Abfrage über UDP/161") {
-            SnmpInspector()
-        }
-        Panel("SNMP-Walk und MIB-Profile","GETNEXT-Walk · System, Interfaces, IP, LLDP · CSV") {
-            SnmpWalkPanel()
-        }
-        Panel("SNMPv3 · AuthPriv","SHA-256 / AES-128 · verschlüsselte Geräteabfragen") {
-            SnmpV3Inspector()
-        }
-        Panel("ICMP Ping","Echte Echo-Anfragen mit RTT und Verlustquote") {
-            IcmpDiagnostics()
-        }
-        Panel("Traceroute","TTL-basierte Hop-Analyse mit Live-Ergebnissen") {
-            RouteDiagnostics()
-        }
-        Panel("DNS-Explorer","A, AAAA, MX, TXT, NS, CNAME, SOA, SRV, PTR und CAA") {
-            DnsExplorer()
-        }
-        Panel("TLS / HTTPS","Zertifikat, TLS-Version, Cipher und SHA-256-Fingerprint") {
-            TlsInspectorPanel(host)
-        }
-        SubnetPanel()
-        Notice("Die TCP-Verbindungszeit ist keine ICMP-Roundtrip-Zeit. DNS-Ergebnisse stammen aktuell vom Android-Systemresolver.")
     }
 }
 private fun formatMs(f:Float) = "%.1f ms".format(Locale.US,f)
