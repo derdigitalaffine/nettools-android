@@ -135,7 +135,7 @@ fun TcpMonitor() {
                 val csv=buildString {
                     appendLine("timestamp_utc,host,port,latency_ms,success,error")
                     snapshot.forEach { s ->
-                        val error=(s.error ?: "").replace(""","""")
+                        val error=(s.error ?: "").replace(34.toChar().toString(), 34.toChar().toString().repeat(2))
                         appendLine("${SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",Locale.US).apply { timeZone=java.util.TimeZone.getTimeZone("UTC") }.format(Date(s.timestamp))},${host.replace(",","")},${portText},${s.latencyMs ?: ""},${s.latencyMs!=null},\"${error}\"")
                     }
                 }
