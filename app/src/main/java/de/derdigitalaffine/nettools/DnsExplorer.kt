@@ -1,6 +1,8 @@
 package de.derdigitalaffine.nettools
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -164,12 +166,12 @@ private val dnsTypes=listOf("A" to 1,"AAAA" to 28,"MX" to 15,"TXT" to 16,"NS" to
         OutlinedTextField(host,{host=it},label={Text("Domain (ASCII/Punycode)")},modifier=Modifier.fillMaxWidth(),singleLine=true)
         OutlinedTextField(resolver,{resolver=it},label={Text("DNS-Resolver-IP")},modifier=Modifier.fillMaxWidth(),singleLine=true)
         Text("Record-Typ",style=MaterialTheme.typography.labelLarge)
-        Row(horizontalArrangement=Arrangement.spacedBy(7.dp),modifier=Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement=Arrangement.spacedBy(7.dp),modifier=Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
             dnsTypes.take(5).forEach { (label,type) ->
                 FilterChip(selected=selected==type,onClick={selected=type},label={Text(label)})
             }
         }
-        Row(horizontalArrangement=Arrangement.spacedBy(7.dp),modifier=Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement=Arrangement.spacedBy(7.dp),modifier=Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
             dnsTypes.drop(5).forEach { (label,type) ->
                 FilterChip(selected=selected==type,onClick={selected=type},label={Text(label)})
             }
