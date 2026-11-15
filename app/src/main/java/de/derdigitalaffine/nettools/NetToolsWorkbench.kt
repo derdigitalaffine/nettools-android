@@ -498,37 +498,97 @@ private fun SubnetPanel() {
     }
 }
 
+@Composable
+private fun WorkspaceEmpty(icon:androidx.compose.ui.graphics.vector.ImageVector,title:String,detail:String) {
+    Surface(color=MaterialTheme.colorScheme.surfaceContainer,
+        shape=RoundedCornerShape(18.dp),modifier=Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=26.dp),
+            horizontalAlignment=Alignment.CenterHorizontally) {
+            Icon(icon,contentDescription=null,modifier=Modifier.size(37.dp),
+                tint=MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(12.dp))
+            Text(title,style=MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(detail,color=MaterialTheme.colorScheme.onSurfaceVariant,
+                style=MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
 @Composable private fun BleScreen(rows:List<String>,scanning:Boolean,start:()->Unit,stop:()->Unit) {
     WorkspaceList {
-        Panel("BLE-Scanner","Bluetooth Low Energy · Advertisement-Discovery") {
+        Panel("Bluetooth Low Energy","Geräte entdecken · Signalstärke und Service-UUIDs") {
             Row(verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.BluetoothSearching,contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(36.dp))
-                Spacer(Modifier.width(12.dp))
+                Surface(color=MaterialTheme.colorScheme.primaryContainer,
+                    shape=RoundedCornerShape(18.dp)) {
+                    Box(Modifier.size(54.dp),contentAlignment=Alignment.Center) {
+                        Icon(Icons.Outlined.BluetoothSearching,contentDescription=null,
+                            tint=MaterialTheme.colorScheme.onPrimaryContainer,modifier=Modifier.size(29.dp))
+                    }
+                }
+                Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(if(scanning) "Scan aktiv" else "Bereit zum Scannen",fontWeight=FontWeight.Bold)
-                    Text("${rows.size} erkannte Adressen",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if(scanning) "Suche nach Geräten" else "Scanner bereit",
+                        style=MaterialTheme.typography.titleMedium)
+                    Text("${rows.size} Einträge · ${if(scanning) "Scan aktiv" else "Scan gestoppt"}",
+                        style=MaterialTheme.typography.bodySmall,
+                        color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(18.dp))
             Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                Button(onClick=start,modifier=Modifier.weight(1f)) { Text(if(scanning) "Neu starten" else "Scan starten") }
-                OutlinedButton(onClick=stop,enabled=scanning) { Text("Stoppen") }
-            }
-            Spacer(Modifier.height(12.dp))
-            Notice("Bluetooth-Scan und Standortdaten benötigen Android-Freigaben. Es werden keine Geräte automatisch verbunden.")
-        }
-        Panel("Gefundene Geräte","MAC/zufällige Adresse, RSSI und annoncierte Service-UUIDs") {
-            if(rows.isEmpty()) Text("Noch keine BLE-Geräte entdeckt.",color=MaterialTheme.colorScheme.onSurfaceVariant)
-            rows.forEachIndexed { index,row ->
-                Row(Modifier.fillMaxWidth().padding(vertical=10.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Bluetooth,contentDescription=null,tint=MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(11.dp))
-                    Text(row,modifier=Modifier.weight(1f),style=MaterialTheme.typography.bodySmall)
+                Button(onClick=start,modifier=Modifier.weight(1f).heightIn(min=50.dp)) {
+                    Icon(Icons.Outlined.PlayArrow,contentDescription=null)
+                    Spacer(Modifier.width(6.dp))
+                    Text(if(scanning) "Neu starten" else "Scan starten")
                 }
-                if(index<rows.lastIndex) HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                OutlinedButton(onClick=stop,enabled=scanning,
+                    modifier=Modifier.heightIn(min=50.dp)) {
+                    Icon(Icons.Outlined.Stop,contentDescription=null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Stopp")
+                }
+            }
+            Spacer(Modifier.height(13.dp))
+            Notice("Bluetooth- und Standortfreigaben sind geräteabhängig. Die App verbindet erkannte Geräte nicht automatisch.")
+        }
+        Panel("Geräte in Reichweite","Adressen, RSSI und annoncierte Dienste") {
+            if(rows.isEmpty()) {
+                WorkspaceEmpty(Icons.Outlined.BluetoothDisabled,
+                    "Noch keine Geräte","Starte einen Scan, um BLE-Advertisements zu sehen.")
+            } else {
+                rows.take(80).forEachIndexed { index,entry ->
+                    val values=entry.split(" | ",limit=3)
+                    val address=values.firstOrNull().orEmpty()
+                    val rssi=values.getOrNull(1).orEmpty()
+                    val services=values.getOrNull(2).orEmpty()
+                    Surface(color=MaterialTheme.colorScheme.surfaceContainer,
+                        shape=RoundedCornerShape(15.dp),modifier=Modifier.fillMaxWidth()) {
+                        Row(Modifier.fillMaxWidth().padding(13.dp),verticalAlignment=Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.Bluetooth,contentDescription=null,
+                                tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(25.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(address,style=MaterialTheme.typography.titleSmall,
+                                    maxLines=2,overflow=TextOverflow.Ellipsis)
+                                if(services.isNotBlank()) Text(services,
+                                    style=MaterialTheme.typography.bodySmall,
+                                    maxLines=2,overflow=TextOverflow.Ellipsis,
+                                    color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                if(rssi.isNotBlank()) Text(rssi,
+                                    style=MaterialTheme.typography.labelMedium,
+                                    color=MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                    if(index<rows.size-1) Spacer(Modifier.height(8.dp))
+                }
+                if(rows.size>80) Text("Weitere ${rows.size-80} Ergebnisse ausgeblendet.",
+                    color=MaterialTheme.colorScheme.onSurfaceVariant,
+                    style=MaterialTheme.typography.bodySmall)
             }
         }
-        Notice("Ein BLE-Scan ist kein Bluetooth-Paketsniffer. GATT-Inspektion, Bonding und Classic-RFCOMM befinden sich noch in der Roadmap.")
+        Notice("Bluetooth-Discovery ist kein Funk-Paketmitschnitt. GATT-Verbindungen und Classic-RFCOMM sind noch nicht implementiert.")
     }
 }
 
@@ -538,34 +598,69 @@ private fun SensorsScreen(
     locate:()->Unit,openMap:()->Unit,start:()->Unit,stop:()->Unit
 ) {
     WorkspaceList {
-        Panel("GNSS & Position","Standortinformation nur auf ausdrückliche Anforderung") {
-            Icon(Icons.Outlined.MyLocation,contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(36.dp))
-            Spacer(Modifier.height(10.dp))
-            Text(position,style=MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(12.dp))
-            Button(onClick=locate,modifier=Modifier.fillMaxWidth()) { Text("Position bestimmen") }
-            OutlinedButton(onClick=openMap,modifier=Modifier.fillMaxWidth()) {
-                Icon(Icons.Outlined.Map,contentDescription=null)
-                Spacer(Modifier.width(8.dp))
-                Text("MapLibre · basemap.de")
-            }
-            Notice("Die Karte lädt externe Kartenkacheln. Standort wird nicht automatisch an den Kartenanbieter gesendet.")
-        }
-        Panel("Gerätesensoren","Android SensorManager · nur unterstützte Hardware") {
+        Panel("GNSS & Position","Standort nur nach ausdrücklicher Freigabe") {
             Row(verticalAlignment=Alignment.CenterVertically) {
-                Metric("Verfügbar","$deviceCount Sensoren",Modifier.weight(1f))
-                Spacer(Modifier.width(10.dp))
-                if(active) OutlinedButton(onClick=stop) { Text("Stoppen") }
-                else Button(onClick=start) { Text("Live starten") }
+                Surface(color=MaterialTheme.colorScheme.primaryContainer,
+                    shape=RoundedCornerShape(17.dp)) {
+                    Box(Modifier.size(54.dp),contentAlignment=Alignment.Center) {
+                        Icon(Icons.Outlined.MyLocation,contentDescription=null,
+                            tint=MaterialTheme.colorScheme.onPrimaryContainer,modifier=Modifier.size(28.dp))
+                    }
+                }
+                Spacer(Modifier.width(13.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Position",style=MaterialTheme.typography.titleMedium)
+                    Text(position,color=MaterialTheme.colorScheme.onSurfaceVariant,
+                        style=MaterialTheme.typography.bodySmall)
+                }
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(17.dp))
+            Button(onClick=locate,modifier=Modifier.fillMaxWidth().heightIn(min=50.dp)) {
+                Icon(Icons.Outlined.GpsFixed,contentDescription=null)
+                Spacer(Modifier.width(8.dp));Text("Position bestimmen")
+            }
+            Spacer(Modifier.height(7.dp))
+            OutlinedButton(onClick=openMap,modifier=Modifier.fillMaxWidth().heightIn(min=50.dp)) {
+                Icon(Icons.Outlined.Map,contentDescription=null)
+                Spacer(Modifier.width(8.dp));Text("Karte öffnen · basemap.de")
+            }
+            Spacer(Modifier.height(12.dp))
+            Notice("Die Karte lädt Kacheln von basemap.de. Es erfolgt keine automatische Standortübermittlung an den Kartenanbieter.")
+        }
+        Panel("Live-Sensordaten","Android SensorManager · unterstützte Gerätesensoren") {
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Surface(shape=RoundedCornerShape(13.dp),
+                    color=MaterialTheme.colorScheme.secondaryContainer) {
+                    Text("$deviceCount verfügbar",Modifier.padding(horizontal=12.dp,vertical=9.dp),
+                        style=MaterialTheme.typography.labelMedium,
+                        color=MaterialTheme.colorScheme.onSecondaryContainer)
+                }
+                Spacer(Modifier.weight(1f))
+                if(active) OutlinedButton(onClick=stop) {
+                    Icon(Icons.Outlined.Stop,contentDescription=null)
+                    Spacer(Modifier.width(6.dp));Text("Stoppen")
+                } else Button(onClick=start) {
+                    Icon(Icons.Outlined.PlayArrow,contentDescription=null)
+                    Spacer(Modifier.width(6.dp));Text("Live starten")
+                }
+            }
+            Spacer(Modifier.height(13.dp))
             if(sensors.isEmpty()) {
-                Text("Live-Messung noch nicht gestartet.",color=MaterialTheme.colorScheme.onSurfaceVariant)
+                WorkspaceEmpty(Icons.Outlined.Sensors,
+                    "Keine Live-Messwerte","Starte die Messung, um Sensorwerte einzulesen.")
             } else {
-                sensors.toSortedMap().forEach { (name,values) ->
-                    Text(name,fontWeight=FontWeight.SemiBold)
-                    Text(values,color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.height(10.dp))
+                sensors.toSortedMap().entries.take(80).forEach { (name,values) ->
+                    Surface(color=MaterialTheme.colorScheme.surfaceContainer,
+                        modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(14.dp)) {
+                        Column(Modifier.padding(13.dp)) {
+                            Text(name,style=MaterialTheme.typography.titleSmall,
+                                maxLines=2,overflow=TextOverflow.Ellipsis)
+                            Spacer(Modifier.height(4.dp))
+                            Text(values,color=MaterialTheme.colorScheme.primary,
+                                style=MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
                 }
             }
         }
@@ -574,25 +669,54 @@ private fun SensorsScreen(
 
 @Composable
 private fun UsbScreen(ctx:Context,refresh:Int,onRefresh:()->Unit) {
-    val devices=remember(refresh) { ctx.getSystemService(UsbManager::class.java)?.deviceList?.values?.toList() ?: emptyList() }
+    val devices=remember(refresh) {
+        ctx.getSystemService(UsbManager::class.java)?.deviceList?.values
+            ?.sortedWith(compareBy({it.vendorId},{it.productId})) ?: emptyList()
+    }
     WorkspaceList {
-        Panel("USB Host","Erkannte USB-Geräte am Smartphone oder Tablet") {
+        Panel("USB-Geräte","Hostmodus · angeschlossene Adapter und Geräte") {
             Row(verticalAlignment=Alignment.CenterVertically) {
-                Metric("Geräte","${devices.size}",Modifier.weight(1f))
-                Spacer(Modifier.width(10.dp))
-                FilledTonalIconButton(onClick=onRefresh) {
-                    Icon(Icons.Outlined.Refresh,contentDescription="USB-Geräte neu einlesen")
+                Surface(color=MaterialTheme.colorScheme.primaryContainer,
+                    shape=RoundedCornerShape(17.dp)) {
+                    Box(Modifier.size(54.dp),contentAlignment=Alignment.Center) {
+                        Icon(Icons.Outlined.Usb,contentDescription=null,
+                            tint=MaterialTheme.colorScheme.onPrimaryContainer,modifier=Modifier.size(28.dp))
+                    }
+                }
+                Spacer(Modifier.width(13.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("${devices.size} Geräte",style=MaterialTheme.typography.titleLarge)
+                    Text("USB-Host-Erkennung",style=MaterialTheme.typography.bodySmall,
+                        color=MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                FilledTonalIconButton(onClick=onRefresh,modifier=Modifier.size(48.dp)) {
+                    Icon(Icons.Outlined.Refresh,contentDescription="USB-Geräte aktualisieren")
                 }
             }
-            Spacer(Modifier.height(12.dp))
-            if(devices.isEmpty()) Text("Keine USB-Geräte erkannt. Adapter verbinden und aktualisieren.",color=MaterialTheme.colorScheme.onSurfaceVariant)
-            devices.forEach {
-                Text("VID %04X · PID %04X".format(it.vendorId,it.productId),fontWeight=FontWeight.Bold)
-                Text("${it.interfaceCount} USB-Interface(s) · Klasse ${it.deviceClass}",color=MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(16.dp))
+            if(devices.isEmpty()) {
+                WorkspaceEmpty(Icons.Outlined.UsbOff,"Kein USB-Gerät erkannt",
+                    "OTG-Gerät anschließen und oben aktualisieren.")
+            } else devices.forEach { device ->
+                Surface(color=MaterialTheme.colorScheme.surfaceContainer,
+                    shape=RoundedCornerShape(16.dp),modifier=Modifier.fillMaxWidth()) {
+                    Row(Modifier.fillMaxWidth().padding(15.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.DeveloperBoard,contentDescription=null,
+                            tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(26.dp))
+                        Spacer(Modifier.width(13.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("VID %04X · PID %04X".format(device.vendorId,device.productId),
+                                style=MaterialTheme.typography.titleSmall)
+                            Text("${device.interfaceCount} Schnittstellen · USB-Klasse ${device.deviceClass}",
+                                style=MaterialTheme.typography.bodySmall,
+                                color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
             }
         }
-        Notice("Die Geräteerkennung ist noch keine serielle Konsole und kein Rohmitschnitt. Ethernet benötigt Android-Treiber; LLDP benötigt echten Layer-2-Zugriff oder eine externe Sonde.")
+        Notice("Die Erkennung allein bietet weder eine serielle Konsole noch Layer-2-Mitschnitt. Für LLDP sind ein unterstütztes Capture-Interface oder ein externer Agent erforderlich.")
     }
 }
 
