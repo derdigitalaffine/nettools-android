@@ -1,6 +1,8 @@
 package de.derdigitalaffine.nettools
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,7 +58,8 @@ private fun probeHop(host:String,ttl:Int):RouteHop {
         OutlinedTextField(host,{host=it},label={Text("Zielhost / IP")},singleLine=true,
             enabled=!running,modifier=Modifier.fillMaxWidth())
         OutlinedTextField(hopsText,{hopsText=it},label={Text("Maximale Hops (1–30)")},singleLine=true,
-            enabled=!running,modifier=Modifier.fillMaxWidth())
+            enabled=!running,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Button(onClick={
                 if(running) { job?.cancel();job=null;running=false }
