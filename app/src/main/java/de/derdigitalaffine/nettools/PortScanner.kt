@@ -85,6 +85,8 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
     var concurrencyText by remember { mutableStateOf("16") }
     val context=LocalContext.current
     var completed by remember { mutableIntStateOf(0) }
+    var shownLimit by remember { mutableIntStateOf(60) }
+    var shareError by remember { mutableStateOf<String?>(null) }
     val results=remember { mutableStateListOf<PortResult>() }
     val parsed=remember(portsText) { runCatching { parsePortList(portsText) } }
     val timeout=timeoutText.toIntOrNull()?.takeIf { it in 200..5000 }
@@ -116,7 +118,7 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
                     val ms=timeout ?: return@Button
                     val parallel=concurrency ?: return@Button
                     val target=host.trim()
-                    results.clear();completed=0;active=true
+                    results.clear();completed=0;shownLimit=60;shareError=null;active=true
                     job=scope.launch {
                         try {
                             val limiter=Semaphore(parallel)
@@ -154,11 +156,14 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
                         append(',');append(ms);append(',');append(r.reason);append('\n')
                     }
                 }
-                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                    type="text/csv";putExtra(Intent.EXTRA_TEXT,csv)
-                },"Portergebnisse teilen"))
+                runCatching {
+                    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                        type="text/csv";putExtra(Intent.EXTRA_TEXT,csv)
+                    },"Portergebnisse teilen"))
+                }.onFailure { shareError=it.localizedMessage ?: "Export fehlgeschlagen" }
             },modifier=Modifier.fillMaxWidth()) { Text("Ergebnisse als CSV teilen") }
         }
+        shareError?.let { Text("CSV-Export: "+it,color=MaterialTheme.colorScheme.error) }
         if(results.isNotEmpty()) {
             val opened=results.count { it.open }
             Text("${results.size} geprüft · $opened offen · ${results.size-opened} geschlossen / nicht erreichbar",
@@ -167,14 +172,22 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
                 FilterChip(selected=!showClosed,onClick={showClosed=false},label={Text("Nur offene")})
                 FilterChip(selected=showClosed,onClick={showClosed=true},label={Text("Alle")})
             }
-            results.sortedBy { it.port }.filter { showClosed || it.open }.forEach { result ->
+            val visible=results.sortedBy { it.port }.filter { showClosed || it.open }
+            visible.take(shownLimit).forEach { result ->
                 HorizontalDivider()
                 Text("${result.port}/TCP · ${if(result.open) "Offen" else "Nicht erreichbar"}",
                     style=MaterialTheme.typography.titleSmall,
                     color=if(result.open) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                Text((result.latencyMs?.let { "%.1f ms".format(Locale.US,it) } ?: result.reason) + " · " + (portServiceHints[result.port] ?: "Unbekannter Dienst"),
+                Text((result.latencyMs?.let { "%.1f ms".format(Locale.US,it) } ?: result.reason) + " · Standardport-Hinweis: " + (portServiceHints[result.port] ?: "nicht zugeordnet"),
                     style=MaterialTheme.typography.bodySmall)
             }
+            if(visible.size>shownLimit) {
+                OutlinedButton(onClick={shownLimit+=60},modifier=Modifier.fillMaxWidth()) {
+                    Text("Weitere 60 anzeigen · "+shownLimit+" / "+visible.size)
+                }
+            }
+            if(visible.isEmpty()) Text("Keine Treffer für den gewählten Filter.",
+                color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
