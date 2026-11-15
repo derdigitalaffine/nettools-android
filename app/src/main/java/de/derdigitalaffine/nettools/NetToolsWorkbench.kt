@@ -260,50 +260,115 @@ private fun Panel(title:String, subtitle:String?=null, modifier:Modifier=Modifie
 
 @Composable
 private fun Overview(network:NetworkView,bleCount:Int,sensorCount:Int,open:(Int)->Unit,refresh:()->Unit) {
+    var showRoutes by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val connected=network.transport!="Nicht verbunden"
     WorkspaceList {
-        Panel("Netzwerkstatus","Aktive Android-Verbindung · live bei Aktualisierung") {
-            Row(verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.WifiTethering,contentDescription=null,tint=MaterialTheme.colorScheme.primary,
-                    modifier=Modifier.size(36.dp))
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(network.transport,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
-                    Text(network.interfaceName,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                FilledTonalIconButton(onClick=refresh) {
-                    Icon(Icons.Outlined.Refresh,contentDescription="Netzwerk aktualisieren")
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                Metric("IP-Adressen",network.addresses.size.toString(),Modifier.weight(1f))
-                Metric("DNS-Server",network.dns.size.toString(),Modifier.weight(1f))
-                Metric("Routen",network.routes.size.toString(),Modifier.weight(1f))
-            }
-            Section("IP-ADRESSEN",network.addresses.ifEmpty { listOf("Nicht verfügbar") }.joinToString("\n"))
-            Section("DNS-RESOLVER",network.dns.ifEmpty { listOf("Nicht verfügbar") }.joinToString("\n"))
-            Notice("Für Quellinterfaces und VPNs können sich Routen unterscheiden. Angezeigt wird die aktive Standardverbindung.")
-        }
-        Panel("Schnellzugriff","Direkt zu den wichtigsten Werkzeugen") {
-            val shortcuts=listOf(
-                Triple("DNS & TCP","Resolver und Verbindung prüfen",1),
-                Triple("Bluetooth LE","Geräte entdecken · $bleCount Ergebnisse",2),
-                Triple("GNSS & Sensoren","$sensorCount Sensoren verfügbar",3),
-                Triple("USB & Ethernet","Hardware erkennen",4)
-            )
-            shortcuts.forEach { (name,desc,index) ->
-                Row(Modifier.fillMaxWidth().clickable { open(index) }.padding(vertical=12.dp),
-                    verticalAlignment=Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(name,fontWeight=FontWeight.SemiBold)
-                        Text(desc,color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
+        Surface(shape=RoundedCornerShape(26.dp),
+            color=MaterialTheme.colorScheme.primaryContainer,
+            modifier=Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(22.dp)) {
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    Surface(shape=RoundedCornerShape(17.dp),
+                        color=MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha=0.1f)) {
+                        Box(Modifier.size(56.dp),contentAlignment=Alignment.Center) {
+                            Icon(if(connected) Icons.Outlined.WifiTethering else Icons.Outlined.SignalWifiOff,
+                                contentDescription=null,modifier=Modifier.size(29.dp),
+                                tint=MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
                     }
-                    Icon(Icons.Outlined.ChevronRight,contentDescription="Öffnen",tint=MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("AKTIVE VERBINDUNG",style=MaterialTheme.typography.labelSmall,
+                            color=MaterialTheme.colorScheme.onPrimaryContainer,fontWeight=FontWeight.Bold)
+                        Text(network.transport,style=MaterialTheme.typography.headlineSmall,
+                            color=MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight=FontWeight.Bold,maxLines=1,overflow=TextOverflow.Ellipsis)
+                        Text(network.interfaceName,
+                            style=MaterialTheme.typography.bodySmall,
+                            color=MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha=0.8f))
+                    }
+                    IconButton(onClick=refresh,modifier=Modifier.size(48.dp)) {
+                        Icon(Icons.Outlined.Refresh,contentDescription="Netzwerk aktualisieren",
+                            tint=MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
                 }
-                if(index!=shortcuts.last().third) HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                Spacer(Modifier.height(14.dp))
+                Text(if(connected) "Geräte- und Netzstatus auf einen Blick. Starte die passenden Werkzeuge direkt darunter."
+                    else "Keine aktive Standardverbindung erkannt. Lokale Werkzeuge funktionieren weiterhin.",
+                    style=MaterialTheme.typography.bodySmall,
+                    color=MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha=0.88f))
             }
         }
-        Notice("Alpha-Ausbau: Ping, Traceroute, Paketmitschnitt, LLDP und SmokePing sind Roadmap-Funktionen und werden hier nicht als verfügbar dargestellt.")
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val narrow=maxWidth<430.dp
+            if(narrow) {
+                Column(verticalArrangement=Arrangement.spacedBy(9.dp)) {
+                    Row(horizontalArrangement=Arrangement.spacedBy(9.dp)) {
+                        Metric("IP-Adressen",network.addresses.size.toString(),Modifier.weight(1f))
+                        Metric("DNS-Server",network.dns.size.toString(),Modifier.weight(1f))
+                    }
+                    Metric("Routen",network.routes.size.toString(),Modifier.fillMaxWidth())
+                }
+            } else {
+                Row(horizontalArrangement=Arrangement.spacedBy(9.dp)) {
+                    Metric("IP-Adressen",network.addresses.size.toString(),Modifier.weight(1f))
+                    Metric("DNS-Server",network.dns.size.toString(),Modifier.weight(1f))
+                    Metric("Routen",network.routes.size.toString(),Modifier.weight(1f))
+                }
+            }
+        }
+        Panel("Werkzeuge","Gezielte Netzwerkanalyse, Funk und Hardware") {
+            pages.drop(1).forEachIndexed { n,page ->
+                val summary=when(n) {
+                    0 -> "${diagnosticTools.size} Diagnosewerkzeuge · DNS, Ping, SNMP, Scanner"
+                    1 -> "$bleCount Bluetooth-Geräte erfasst"
+                    2 -> "$sensorCount Sensorschnittstellen verfügbar"
+                    else -> "USB- und Ethernetgeräte anzeigen"
+                }
+                Surface(onClick={open(n+1)},color=MaterialTheme.colorScheme.surfaceContainer,
+                    shape=RoundedCornerShape(16.dp),modifier=Modifier.fillMaxWidth()) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=12.dp),
+                        verticalAlignment=Alignment.CenterVertically) {
+                        Surface(color=MaterialTheme.colorScheme.secondaryContainer,
+                            shape=RoundedCornerShape(13.dp)) {
+                            Box(Modifier.size(46.dp),contentAlignment=Alignment.Center) {
+                                Icon(page.symbol,contentDescription=null,modifier=Modifier.size(24.dp),
+                                    tint=MaterialTheme.colorScheme.onSecondaryContainer)
+                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(page.title,style=MaterialTheme.typography.titleSmall)
+                            Text(summary,style=MaterialTheme.typography.bodySmall,
+                                maxLines=2,overflow=TextOverflow.Ellipsis,
+                                color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Icon(Icons.Outlined.ChevronRight,contentDescription=null,
+                            tint=MaterialTheme.colorScheme.primary)
+                    }
+                }
+                if(n<pages.size-2) Spacer(Modifier.height(9.dp))
+            }
+        }
+        Panel("Verbindungsdetails","Adressen und DNS-Resolver der aktiven Standardverbindung") {
+            androidx.compose.foundation.text.selection.SelectionContainer {
+                Column {
+                    Section("IP-ADRESSEN",
+                        network.addresses.ifEmpty { listOf("Keine Adresse") }.joinToString("\n"))
+                    Section("DNS-RESOLVER",
+                        network.dns.ifEmpty { listOf("Kein Resolver gemeldet") }.joinToString("\n"))
+                    OutlinedButton(onClick={showRoutes=!showRoutes},modifier=Modifier.fillMaxWidth()) {
+                        Icon(if(showRoutes) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                            contentDescription=null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(if(showRoutes) "Routen ausblenden" else "${network.routes.size} Routen anzeigen")
+                    }
+                    if(showRoutes) Section("ROUTEN",
+                        network.routes.ifEmpty { listOf("Keine Routen") }.joinToString("\n"))
+                }
+            }
+        }
+        Notice("Die App nutzt den aktuellen Android-Netzwerkpfad. Non-Root-TCP-Scans, ICMP, DNS und SNMP sind verfügbar; physischer Layer-2-Mitschnitt und LLDP benötigen zusätzliche Voraussetzungen.")
     }
 }
 
