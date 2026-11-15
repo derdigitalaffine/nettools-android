@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -82,12 +84,15 @@ fun TcpMonitor() {
             enabled=!active,modifier=Modifier.fillMaxWidth())
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(portText,{portText=it},label={Text("Port")},singleLine=true,
-                enabled=!active,modifier=Modifier.weight(1f))
+                enabled=!active,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.weight(1f))
             OutlinedTextField(intervalText,{intervalText=it},label={Text("Intervall (s)")},singleLine=true,
-                enabled=!active,modifier=Modifier.weight(1f))
+                enabled=!active,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.weight(1f))
         }
         OutlinedTextField(timeoutText,{timeoutText=it},label={Text("Timeout (ms)")},
-            singleLine=true,enabled=!active,modifier=Modifier.fillMaxWidth())
+            singleLine=true,enabled=!active,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Button(onClick={
                 if(active) stop() else {
