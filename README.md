@@ -1,59 +1,61 @@
 # NetTools Android
 
-Native Netzwerktoolbox mit Kotlin, Jetpack Compose, Android Bluetooth/BLE, GPS/Sensoren und MapLibre mit amtlicher basemap.de-Karte.
+Native Netzwerk-Workbench für Android mit **Kotlin, Jetpack Compose Material 3, Bluetooth LE, GNSS/Sensoren, USB und MapLibre/basemap.de**. Offline-first, ohne Benutzerkonto und ohne versteckte Telemetrie.
 
-## Build
+## Oberfläche · 0.10.0-alpha
+
+Die App besitzt ein gemeinsames Designsystem mit hohem Kontrast und hellem/dunklem Modus:
+
+- **Smartphone:** kompakte Hauptnavigation unten, Werkzeugkatalog und fokussierte Einzelansicht. Android-Zurück führt aus einem Werkzeug zurück in den Katalog.
+- **Tablet:** Navigation Rail und adaptives Liste-Detail-Layout für Diagnosewerkzeuge.
+- **Große Displays:** permanente Seitennavigation mit ausgeschriebenen Zielen.
+- **12 Diagnosewerkzeuge:** Suche, Themenfilter, Favoriten und Kennzeichnung von Messverfahren bzw. Einschränkungen.
+- **Dashboard:** aktiver Netzwerktransport, IP-/DNS-/Routenkennzahlen, Schnellaktionen und aufklappbare Verbindungsdetails.
+- **Funk, Sensoren, USB und Karte:** harmonisierte Karten, Leerzustände, klare Aktionen, Signalfilter bei BLE, bessere kleine Displays.
+- Favoriten und Designwahl werden lokal gespeichert; Eingaben, soweit unkritisch, beim Werkzeugwechsel erhalten. **SNMP-Passwörter und Communities werden nicht dauerhaft gespeichert.**
+- Mobile Zahleneingabe für Port-, Timeout-, OID- und Zählerfelder.
+
+### Funktionsstand
+
+| Bereich | Implementiert |
+| --- | --- |
+| Netzwerk | Standardverbindung, Interface, IP-Adressen, DNS-Resolver und Routen |
+| DNS | Systemresolver; A/AAAA/MX/TXT/NS/CNAME/SOA/SRV/PTR/CAA über UDP/53, TCP-Fallback |
+| Messungen | TCP-Connect, Live-Zeitreihe und CSV; ICMP-Echo und TTL-Hop-Analyse via Android-`ping` |
+| Analyse | IPv4-Subnetzrechner, TLS-Zertifikatsprüfung mit Hostnamenvalidierung |
+| Portscanner | Non-Root-TCP-Connect-Prüfung: max. 1024 ausgewählte Ports und 32 Verbindungen; Scanprofile, CSV, opt-in-Banner/HTTP/TLS-Indizien |
+| Nmap | Sicherheitsbegrenzter Import externer Nmap-XML-Berichte (`-oX`) über Android-Dateiauswahl |
+| SNMP | SNMPv2c GET und begrenzter GETNEXT-Walk mit CSV; SNMPv3 AuthPriv GET über SNMP4J/SHA-256/AES-128 |
+| Bluetooth | BLE-Advertisement-Scan mit RSSI, Service-UUIDs und Filter für stärkere Signale |
+| GNSS/Sensoren | Standortabfrage auf Nutzeraktion, Android-Sensormesswerte |
+| Karte | MapLibre mit basemap.de-Farb-/Graustil, Zoom und Zurücksetzen |
+| Hardware | USB-Host-Geräte mit Vendor-/Product-ID und Interfacezahl |
+
+### Was noch **nicht** enthalten ist
+
+Eine native, in der APK ausgeführte Nmap-Engine (`-sV`, NSE, `-sS`), SNMPv3-Walk und vollständige MIB-Textauflösung, BLE-GATT-Explorer, SSH-Terminal, USB-Seriell-Konsole, Ethernet-Rohmitschnitt, LLDP-Frames, PCAP und ein vollständiger SmokePing-Datenspeicher. Die Portbezeichnungen im Connect-Scanner sind **Hinweise**, keine verifizierte Diensterkennung. Der Android-Ping-Aufruf kann geräteabhängig fehlen bzw. eingeschränkt sein.
+
+[Native-Nmap-Integrationsgates](docs/architecture/NMAP-NATIVE-ANDROID.md) · [Master-Roadmap](docs/roadmap/MASTER-ROADMAP.md) · [UI-/UX-Standard](docs/UI-UX.md)
+
+## Android-Build
+
+Voraussetzungen: JDK 17, Android SDK 35, Gradle 8.13.
+
 ```sh
-gradle :app:assembleDebug
+gradle :app:testDebugUnitTest :app:assembleDebug
 ```
-Benötigt JDK 17, Android SDK 35 und Gradle 8.13. GitHub Actions baut eine installierbare Debug-APK als Workflow-Artefakt. Kein Release signiert; Debug-APK ist kein Qualitätsnachweis für alle Hardwarefunktionen.
 
-## Implementierter Funktionsstand (0.9.0-alpha)
-- Adaptiver Compose-Workspace mit dunklem Design, Dashboard und Bottom Navigation (Telefon) / Navigation Rail (Tablet).
-- Netzwerkstatus mit DNS-Servern, aktiver Schnittstelle, IP-Adressen und Routen.
-- DNS-Hostnameauflösung mit dem Android-Systemresolver und TCP-Connect-Zeit mit Messverlauf. **Kein ICMP-Ping oder vollständiger DNS-RR-Browser.**
-- IPv4-CIDR-Rechner mit Netzmaske, Broadcast und Hostbereich sowie Unit-Tests.
-- Wiederholtes TCP-Connect-Monitoring mit Latenz-Zeitreihe, Ausfallquote, Mittelwert, Schwankung und CSV-Export (nur bei geöffneter Ansicht).
-- TLS-Zertifikatsprüfung mit echter Hostnamenvalidierung, Protokoll/Cipher, Aussteller, Gültigkeit und SHA-256-Fingerprint.
-- DNS-Record-Explorer mit direktem UDP-DNS, TCP-Fallback bei TC-Flag, auswählbarem Resolver und A/AAAA/MX/TXT/NS/CNAME/SOA/SRV/PTR/CAA-Records. Kein DoH, kein DNSSEC-Validierungsclient.
-- Gezielte TCP-Portprüfung mit Portlisten und Bereichen (max. 128 Ports pro Lauf), Timeout, Live-Status und Filter für offene Ports.
-- ICMP-Echo/Ping mit RTT und Verlustquote sowie TTL-basierte Traceroute-Hop-Analyse. Beide nutzen das Android-Systemprogramm `ping`; abhängig von Firmware, Router-Antwortverhalten und Berechtigungen. Keine Root-Pflicht zugesichert.
-- BLE-Discovery mit Android-Berechtigung, RSSI und Service-UUID-Anzeige; noch kein GATT-Explorer.
-- Android-Sensor-Livewerte, GPS-Standortabfrage, USB-Geräteliste.
-- MapLibre-Kartenarbeitsplatz mit basemap.de-Farb-/Graustil und Zoomkontrollen.
+Der Workflow **GitHub Actions → Android APK** kompiliert und testet bei jedem Push. Das Artefakt `nettools-debug-apk` ist eine installierbare Debug-APK. Es existiert keine produktionssignierte Veröffentlichung. Ein grüner CI-Lauf belegt weder die Kompatibilität mit jeder Android-Firmware noch Hardware-, Netzwerk- und Accessibility-Tests.
 
-[UI-/UX-Standard](docs/UI-UX.md) · [Master-Roadmap](docs/roadmap/MASTER-ROADMAP.md)
+## Datenschutz & Netzwerk-Sicherheit
 
-## APK
-Der GitHub-Actions-Workflow unter **Actions → Android APK** erzeugt bei jedem Push die Debug-APK als `nettools-debug-apk`-Artifact. Die CI prüft Compilation und Unit-Tests. Ein Debug-Build ersetzt **keine** Tests auf realen Android-Geräten, keinen Sicherheitsreview und keine Produktionssignatur. USB-Serial, LLDP, PCAP, grafisches Traceroute, ICMP, SmokePing und ASN/BGP stehen weiter auf der Roadmap.
+- Scans und Netzwerkmanagement nur für autorisierte Zielsysteme.
+- Kein Account, keine versteckte Telemetrie, keine dauerhaften Standortmessungen im Hintergrund.
+- Bluetooth und Standort werden über die zuständigen Android-Systemfreigaben gestartet.
+- Kartenkacheln über basemap.de; der Anbieter erhält technisch bedingte Anfragedaten beim Kartenaufruf.
+- SNMPv2c-Community wird **unverschlüsselt übertragen**; wenn möglich SNMPv3 AuthPriv nutzen. AuthPriv-Zugangsdaten werden nicht gespeichert.
+- Ein BLE-Scan ist kein Bluetooth-Sniffer. Normales Android ermöglicht ohne geeignete Zusatzhardware/Privilegien keinen universellen physischen Ethernet-Layer-2-Mitschnitt.
 
-[Master-Roadmap](docs/roadmap/MASTER-ROADMAP.md)
+## Qualität und offene Gates
 
-## Sicherheit und Datenschutz
-Standort und Bluetooth nur nach Android-Systemfreigabe; kein dauerhafter Trackingservice. Keine Telemetrie. Bei der Kartenanzeige werden Kartenkacheln von basemap.de abgerufen; Kartennutzung überträgt technische Anfragedaten an diesen Dienst. BLE-Scan ist kein Rohpaketmitschnitt.
-
-
-### Erweiterte Netzwerkdiagnose (0.9.0-alpha)
-- Nmap-orientierter TCP-Connect-Scanner für Android ohne Root: bis 1024 gezielt ausgewählte Ports, 1–32 parallele Verbindungen, Fortschrittsanzeige und Filter. **Dies ist keine Portierung des nativen Nmap-Binaries**; NSE, SYN-/UDP-Scans und Nmap-Service-Fingerprinting sind nicht enthalten.
-- SNMPv2c Read-only GET mit ASN.1/BER-Codierung und OID-Auswertung. Community-basierte SNMPv2c-Anfragen sind unverschlüsselt; für vertrauliche Netze ist SNMPv3 mit Authentifizierung/Verschlüsselung vorzuziehen. Kein SNMPv3 oder Walk in dieser Version.
-
-### Diagnoseerweiterungen 0.9.0-alpha
-
-- SNMPv2c-GETNEXT-Walk mit Begrenzung auf 200 Einträge, lexikografischer OID-/Teilbaumprüfung, System-/Interfaces-/IP-/Host-/LLDP-Profilen, Abbruch und CSV-Export. **Keine** automatische MIB-Textauflösung oder SNMPv3-Unterstützung.
-- Nmap-kompatibler Offline-Berichtsimport für XML-Dateien (-oX) über Android SAF; gesicherter XML-Parser gegen DTD/XXE, 2-MB- und Host-Limits. **Native Nmap läuft derzeit nicht innerhalb der APK**.
-- Non-Root-Portscanner mit Web-/Infrastruktur-/1–1024-Profilen, bekannten Port-Bezeichnern (**nur Hinweise, kein Fingerprinting**) und CSV-Export.
-- Bedingungen für eine mögliche native Android-Portierung: [Nmap-Architektur und Release-Gates](docs/architecture/NMAP-NATIVE-ANDROID.md).
-
-### SNMPv3 (0.9.0-alpha)
-
-- Neues SNMPv3-GET-Werkzeug mit USM **AuthPriv**, HMAC-SHA-256 und AES-128.
-- Implementiert über **SNMP4J 3.13.2 (Apache-2.0)**. Die App fragt die authoritative Engine-ID ab, authentifiziert den Benutzer und verschlüsselt die Anfrage. Beide Passwörter werden nicht auf dem Gerät gespeichert.
-- Keine SNMP-SET-Operationen, keine Passwörter im CSV-Export. Aktuell SNMPv3 **GET**, nicht GETBULK/WALK. Gegen echte SNMPv3-Geräte ist ein Praxis-Interoperabilitätstest erforderlich.
-- Die bereits vorhandenen SNMPv2c-GET-/GETNEXT-Werkzeuge bleiben für ältere Geräte separat nutzbar. SNMPv2c ist nicht verschlüsselt.
-
-### Opt-in-Diensthinweise (0.9.0-alpha)
-
-- Ein separater Button prüft maximal 24 **bereits als offen erkannte** Ports. Es werden nur definierte Standardports untersucht und höchstens vier Erkennungsversuche parallel ausgeführt.
-- SSH/FTP/SMTP/POP3/IMAP: begrenzte Bannerprüfung. HTTP: HEAD-Abfrage. HTTPS: validierter TLS-Handshake mit Hostnamenprüfung. Ergebnisse werden als **Indizien**, nicht als sicheres Nmap-Service-Fingerprinting bezeichnet.
-- Die Scanergebnisliste zeigt zunächst nur 60 Einträge pro Seite; weitere können nachgeladen werden. Alle Resultate bleiben im CSV-Export enthalten.
-- Kein Nmap-NSE, kein vollständiges `-sV`, keine ungefragten Dienstabfragen auf beliebigen Ports.
+Unit-Tests decken unter anderem DNS-, SNMP-, Subnetz-, Scanner-, Nmap-Import- und Werkzeugfilterlogik ab. Für eine belastbare Produktfreigabe fehlen weiterhin **manuelle Tests auf mehreren realen Smartphones und Tablets, Layout-/Screenshot-Tests, TalkBack sowie 150–200 % Schriftgröße**. Diese Punkte bleiben ausdrücklich offen.
