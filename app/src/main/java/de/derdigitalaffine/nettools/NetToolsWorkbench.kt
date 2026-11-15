@@ -234,7 +234,7 @@ fun NetToolsWorkbench(
             SnackbarHost(
                 hostState=snackbar,
                 modifier=Modifier.align(Alignment.BottomCenter)
-                    .padding(horizontal=14.dp,bottom=if(wide) 18.dp else 92.dp)
+                    .padding(start=14.dp,end=14.dp,bottom=if(wide) 18.dp else 92.dp)
             )
         }
     }
