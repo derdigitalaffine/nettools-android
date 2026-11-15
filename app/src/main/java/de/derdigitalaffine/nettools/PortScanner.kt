@@ -5,6 +5,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -109,10 +111,13 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
             }
         }
         OutlinedTextField(portsText,{portsText=it},label={Text("Ports (Komma oder Bereich, max. 1024)")},
-            singleLine=true,enabled=!active,modifier=Modifier.fillMaxWidth())
+            singleLine=true,enabled=!active,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Ascii),
+            modifier=Modifier.fillMaxWidth())
         OutlinedTextField(timeoutText,{timeoutText=it},label={Text("Timeout je Port (200–5000 ms)")},
-            singleLine=true,enabled=!active,modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(concurrencyText,{concurrencyText=it},label={Text("Parallelität (1–32)")},singleLine=true,enabled=!active,modifier=Modifier.fillMaxWidth())
+            singleLine=true,enabled=!active,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(concurrencyText,{concurrencyText=it},label={Text("Parallelität (1–32)")},singleLine=true,enabled=!active,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         parsed.exceptionOrNull()?.let { Text(it.localizedMessage ?: "Ungültige Portliste",color=MaterialTheme.colorScheme.error) }
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Button(onClick={
