@@ -353,11 +353,14 @@ private fun Diagnostics(
         Panel("Live-Monitoring","TCP-Connect-Verfügbarkeit · Zeitreihen · CSV-Export") {
             TcpMonitor()
         }
-        Panel("Nmap-orientierter TCP-Scan","Non-Root TCP Connect · bis 1024 Ports · parallel") {
+        Panel("Nmap-orientierter TCP-Scan","Non-Root TCP Connect · Scanprofile · bis 1024 Ports · CSV") {
             PortScanner()
         }
         Panel("SNMP-Geräteanalyse","SNMPv2c Read-only · OID-Abfrage über UDP/161") {
             SnmpInspector()
+        }
+        Panel("SNMP-Walk und MIB-Profile","GETNEXT-Walk · System, Interfaces, IP, LLDP · CSV") {
+            SnmpWalkPanel()
         }
         Panel("ICMP Ping","Echte Echo-Anfragen mit RTT und Verlustquote") {
             IcmpDiagnostics()
