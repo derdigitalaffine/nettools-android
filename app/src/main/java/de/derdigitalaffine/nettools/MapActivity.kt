@@ -47,7 +47,7 @@ class MapActivity : ComponentActivity() {
             val scheme=darkColorScheme(primary=teal,onPrimary=background,background=background,onBackground=foreground)
             var chosen by remember { mutableIntStateOf(0) }
             MaterialTheme(colorScheme=scheme) {
-                Box(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize().background(background).safeDrawingPadding()) {
                     AndroidView(factory={mapView},modifier=Modifier.fillMaxSize())
                     Surface(
                         color=background.copy(alpha=.95f),
