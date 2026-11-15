@@ -1,6 +1,6 @@
 # NetTools Android – Master-Roadmap (15.11.2026)
 
-> Status: Planung, noch keine Implementierung oder APK. Ausgangsrepository bei Bestandsaufnahme leer. Ziel: professionelle, native und modular erweiterbare Netzwerktoolbox für Smartphones und Tablets mit Offline-Basisfunktionen, USB-Hardware und optionalem Remote-Capture-Agenten.
+> Status 15.11.2026: Android-Alpha **0.9.0-alpha** mit Debug-APK über GitHub Actions. Erste Diagnosewerkzeuge (TCP, ICMP, DNS, TLS, SNMPv2c/v3, Portscanner, Nmap-XML-Import) sind implementiert. Die folgende Roadmap beschreibt weiterhin **nicht erreichte** Produktziele und keine vollständige Fertigstellung. Ausgangsrepository bei Bestandsaufnahme leer. Ziel: professionelle, native und modular erweiterbare Netzwerktoolbox für Smartphones und Tablets mit Offline-Basisfunktionen, USB-Hardware und optionalem Remote-Capture-Agenten.
 
 ## 0. Produktprinzipien
 
