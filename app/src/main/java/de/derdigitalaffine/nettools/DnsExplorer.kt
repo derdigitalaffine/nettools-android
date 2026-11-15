@@ -5,6 +5,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -153,9 +154,9 @@ private fun readFully(input:java.io.InputStream,target:ByteArray) {
 private val dnsTypes=listOf("A" to 1,"AAAA" to 28,"MX" to 15,"TXT" to 16,"NS" to 2,"CNAME" to 5,"SOA" to 6,"SRV" to 33,"PTR" to 12,"CAA" to 257)
 @Composable fun DnsExplorer() {
     val scope=rememberCoroutineScope()
-    var host by remember { mutableStateOf("example.org") }
-    var resolver by remember { mutableStateOf("1.1.1.1") }
-    var selected by remember { mutableIntStateOf(1) }
+    var host by rememberSaveable { mutableStateOf("example.org") }
+    var resolver by rememberSaveable { mutableStateOf("1.1.1.1") }
+    var selected by rememberSaveable { mutableIntStateOf(1) }
     var busy by remember { mutableStateOf(false) }
     var output by remember { mutableStateOf<DnsResponse?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
