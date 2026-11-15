@@ -10,8 +10,8 @@ android {
         applicationId = "de.derdigitalaffine.nettools"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.9.0-alpha"
+        versionCode = 10
+        versionName = "0.10.0-alpha"
     }
     buildTypes { release { isMinifyEnabled = false } }
     compileOptions {
