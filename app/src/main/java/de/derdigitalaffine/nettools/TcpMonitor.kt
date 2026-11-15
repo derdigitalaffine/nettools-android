@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -58,10 +59,10 @@ private fun percentText(value: Double) = "%.1f %%".format(Locale.US,value)
 fun TcpMonitor() {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    var host by remember { mutableStateOf("1.1.1.1") }
-    var portText by remember { mutableStateOf("443") }
-    var intervalText by remember { mutableStateOf("2") }
-    var timeoutText by remember { mutableStateOf("1500") }
+    var host by rememberSaveable { mutableStateOf("1.1.1.1") }
+    var portText by rememberSaveable { mutableStateOf("443") }
+    var intervalText by rememberSaveable { mutableStateOf("2") }
+    var timeoutText by rememberSaveable { mutableStateOf("1500") }
     var active by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
     val samples = remember { mutableStateListOf<TcpSample>() }
