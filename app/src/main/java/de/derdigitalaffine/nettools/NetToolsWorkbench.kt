@@ -350,10 +350,43 @@ private fun Diagnostics(
                 Timeline(timings)
             }
         }
+        SubnetPanel()
         Notice("Die TCP-Verbindungszeit ist keine ICMP-Roundtrip-Zeit. DNS-Ergebnisse stammen aktuell vom Android-Systemresolver.")
     }
 }
 private fun formatMs(f:Float) = "%.1f ms".format(Locale.US,f)
+@Composable
+private fun SubnetPanel() {
+    var cidr by remember { mutableStateOf("192.168.1.42/24") }
+    val calculation = remember(cidr) { runCatching { ipv4Subnet(cidr) } }
+    Panel("IPv4-Subnetzrechner","Netzmaske, Adressbereich und nutzbare Hosts") {
+        OutlinedTextField(value=cidr,onValueChange={cidr=it},label={Text("Adresse / CIDR")},
+            singleLine=true,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(14.dp))
+        Spacer(Modifier.height(12.dp))
+        calculation.onSuccess { result ->
+            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                Metric("Netzadresse",result.network,Modifier.weight(1f))
+                Metric("Netzmaske",result.netmask,Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                Metric("Erster Host",result.first,Modifier.weight(1f))
+                Metric("Letzter Host",result.last,Modifier.weight(1f))
+            }
+            Section("BROADCAST",result.broadcast)
+            Text("Adressen: ${result.count} · Nutzbar: ${result.usableHosts}",style=MaterialTheme.typography.bodyMedium)
+            if(result.prefix>=31) {
+                Spacer(Modifier.height(8.dp))
+                Text("/31 verwendet zwei Point-to-Point-Adressen, /32 eine einzelne Hostadresse.",
+                    style=MaterialTheme.typography.bodySmall,color=Muted)
+            }
+        }.onFailure {
+            Text(it.message ?: "Ungültige Adresse",color=MaterialTheme.colorScheme.error,
+                style=MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
 @Composable private fun Timeline(values:List<Float>) {
     val min=values.minOrNull() ?: 0f
     val max=(values.maxOrNull() ?: 1f).coerceAtLeast(min+1f)
