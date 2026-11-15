@@ -13,9 +13,9 @@ class PortScannerTest {
         }
     }
     @Test fun acceptsMaximumRange() {
-        assertEquals(128,parsePortList("1000-1127").size)
+        assertEquals(1024,parsePortList("1000-2023").size)
     }
     @Test fun rejectsOverLimit() {
-        try { parsePortList("1000-1128");fail("Accepted 129 ports") } catch (_:IllegalArgumentException) {}
+        try { parsePortList("1000-2024");fail("Accepted 1025 ports") } catch (_:IllegalArgumentException) {}
     }
 }
