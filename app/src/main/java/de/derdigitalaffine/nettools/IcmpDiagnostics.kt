@@ -3,6 +3,7 @@ package de.derdigitalaffine.nettools
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
@@ -40,8 +41,8 @@ private fun pingOnce(host:String,sequence:Int):PingResult {
 }
 @Composable fun IcmpDiagnostics() {
     val scope=rememberCoroutineScope()
-    var host by remember { mutableStateOf("1.1.1.1") }
-    var count by remember { mutableStateOf("4") }
+    var host by rememberSaveable { mutableStateOf("1.1.1.1") }
+    var count by rememberSaveable { mutableStateOf("4") }
     var running by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
     val results=remember { mutableStateListOf<PingResult>() }
