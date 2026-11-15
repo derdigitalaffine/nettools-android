@@ -356,6 +356,9 @@ private fun Diagnostics(
         Panel("Nmap-orientierter TCP-Scan","Non-Root TCP Connect · Scanprofile · bis 1024 Ports · CSV") {
             PortScanner()
         }
+        Panel("Nmap-XML-Berichte","Externe Nmap-Ergebnisse sicher importieren und auswerten") {
+            NmapXmlImportPanel()
+        }
         Panel("SNMP-Geräteanalyse","SNMPv2c Read-only · OID-Abfrage über UDP/161") {
             SnmpInspector()
         }
