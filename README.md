@@ -13,6 +13,8 @@ Benötigt JDK 17, Android SDK 35 und Gradle 8.13. GitHub Actions baut eine insta
 - Netzwerkstatus mit DNS-Servern, aktiver Schnittstelle, IP-Adressen und Routen.
 - DNS-Hostnameauflösung mit dem Android-Systemresolver und TCP-Connect-Zeit mit Messverlauf. **Kein ICMP-Ping oder vollständiger DNS-RR-Browser.**
 - IPv4-CIDR-Rechner mit Netzmaske, Broadcast und Hostbereich sowie Unit-Tests.
+- Wiederholtes TCP-Connect-Monitoring mit Latenz-Zeitreihe, Ausfallquote, Mittelwert, Schwankung und CSV-Export (nur bei geöffneter Ansicht).
+- TLS-Zertifikatsprüfung mit echter Hostnamenvalidierung, Protokoll/Cipher, Aussteller, Gültigkeit und SHA-256-Fingerprint.
 - BLE-Discovery mit Android-Berechtigung, RSSI und Service-UUID-Anzeige; noch kein GATT-Explorer.
 - Android-Sensor-Livewerte, GPS-Standortabfrage, USB-Geräteliste.
 - MapLibre-Kartenarbeitsplatz mit basemap.de-Farb-/Graustil und Zoomkontrollen.
