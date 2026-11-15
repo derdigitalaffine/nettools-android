@@ -14,6 +14,8 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -60,11 +62,13 @@ internal fun filterDiagnosticTools(
 internal fun DiagnosticsHub(
     toolContent:@Composable (String)->Unit
 ) {
+    val context=LocalContext.current
+    val detailsState=rememberSaveableStateHolder()
     var selection by rememberSaveable { mutableStateOf<String?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf("Alle") }
     var onlyFavorites by rememberSaveable { mutableStateOf(false) }
-    var savedFavorites by rememberSaveable { mutableStateOf("quick,ping,dns,ports") }
+    var savedFavorites by rememberSaveable { mutableStateOf(UiPreferenceStore.favorites(context)) }
     val favorites=remember(savedFavorites) { savedFavorites.split(',').filter { it.isNotBlank() }.toSet() }
     val shown=remember(query,category,onlyFavorites,favorites) {
         filterDiagnosticTools(query,category,onlyFavorites,favorites)
@@ -139,6 +143,7 @@ internal fun DiagnosticsHub(
                                         val changed=favorites.toMutableSet()
                                         if(!changed.add(tool.id)) changed.remove(tool.id)
                                         savedFavorites=changed.sorted().joinToString(",")
+                                        UiPreferenceStore.setFavorites(context,changed)
                                     }
                                 )
                             }
@@ -193,7 +198,7 @@ internal fun DiagnosticsHub(
                                 Text(tool.subtitle,style=MaterialTheme.typography.bodyMedium,
                                     color=MaterialTheme.colorScheme.onSurfaceVariant)
                                 Spacer(Modifier.height(16.dp))
-                                key(tool.id) { toolContent(tool.id) }
+                                detailsState.SaveableStateProvider(tool.id) { toolContent(tool.id) }
                             }
                         }
                         if(tool.id=="ports" || tool.id=="snmp" || tool.id=="walk" || tool.id=="snmpv3") {
