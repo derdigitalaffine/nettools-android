@@ -18,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -75,7 +76,7 @@ internal fun DiagnosticsHub(
         filterDiagnosticTools(query,category,onlyFavorites,favorites)
     }
     val categories=listOf("Alle","Netzwerk","Monitoring","Sicherheit","Management")
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize().imePadding()) {
         val wide=maxWidth>=760.dp
         val spacious=maxWidth>=1100.dp
         val showCatalog=wide || selection==null
@@ -84,7 +85,7 @@ internal fun DiagnosticsHub(
         Row(Modifier.fillMaxSize()) {
             if(showCatalog) {
                 Column(
-                    Modifier.then(if(wide) Modifier.width(if(spacious) 360.dp else 300.dp) else Modifier.fillMaxSize())
+                    Modifier.testTag("diagnostics.catalog").then(if(wide) Modifier.width(if(spacious) 360.dp else 300.dp) else Modifier.fillMaxSize())
                         .padding(start=if(wide) 20.dp else 16.dp,end=if(wide) 12.dp else 16.dp)
                 ) {
                     Row(Modifier.fillMaxWidth().padding(top=8.dp,bottom=14.dp),
@@ -105,7 +106,7 @@ internal fun DiagnosticsHub(
                         }
                     }
                     OutlinedTextField(
-                        value=query,onValueChange={query=it},modifier=Modifier.fillMaxWidth(),
+                        value=query,onValueChange={query=it},modifier=Modifier.fillMaxWidth().testTag("diagnostics.search"),
                         leadingIcon={Icon(Icons.Outlined.Search,contentDescription=null)},
                         trailingIcon={
                             if(query.isNotBlank()) IconButton(onClick={query=""}) {
@@ -160,13 +161,13 @@ internal fun DiagnosticsHub(
             if(wide || selection!=null) {
                 val current=selection ?: "quick"
                 val tool=diagnosticTools.firstOrNull { it.id==current } ?: diagnosticTools.first()
-                Column(Modifier.weight(1f).fillMaxHeight()) {
+                Column(Modifier.weight(1f).fillMaxHeight().testTag("diagnostics.detail")) {
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal=if(wide) 20.dp else 12.dp,vertical=8.dp),
                         verticalAlignment=Alignment.CenterVertically
                     ) {
                         if(!wide) {
-                            IconButton(onClick={selection=null}) {
+                            IconButton(onClick={selection=null},modifier=Modifier.testTag("diagnostics.back")) {
                                 Icon(Icons.Outlined.ArrowBack,contentDescription="Zur Werkzeugübersicht")
                             }
                         }
@@ -222,7 +223,7 @@ private fun DiagnosticToolRow(
 ) {
     val colors=MaterialTheme.colorScheme
     Surface(
-        modifier=Modifier.fillMaxWidth(),
+        modifier=Modifier.fillMaxWidth().testTag("diagnostics.tool."+tool.id),
         onClick=onSelect,shape=RoundedCornerShape(18.dp),
         color=if(selected) colors.primaryContainer.copy(alpha=0.55f) else colors.surfaceContainerLow,
         border=BorderStroke(1.dp,if(selected) colors.primary.copy(alpha=0.6f) else colors.outlineVariant.copy(alpha=0.45f))
