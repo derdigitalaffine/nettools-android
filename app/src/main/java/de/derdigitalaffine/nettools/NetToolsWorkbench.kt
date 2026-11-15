@@ -365,6 +365,9 @@ private fun Diagnostics(
         Panel("SNMP-Walk und MIB-Profile","GETNEXT-Walk · System, Interfaces, IP, LLDP · CSV") {
             SnmpWalkPanel()
         }
+        Panel("SNMPv3 · AuthPriv","SHA-256 / AES-128 · verschlüsselte Geräteabfragen") {
+            SnmpV3Inspector()
+        }
         Panel("ICMP Ping","Echte Echo-Anfragen mit RTT und Verlustquote") {
             IcmpDiagnostics()
         }
