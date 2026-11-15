@@ -1,6 +1,8 @@
 package de.derdigitalaffine.nettools
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -80,13 +82,17 @@ private fun snmpV3Get(host:String,port:Int,oid:String,creds:SnmpV3Credentials):S
         Text("Sichere, lesende GET-Abfrage mit SHA-256-Authentifizierung und AES-128-Verschlüsselung. Zugangsdaten werden nicht gespeichert.",
             style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(host,{host=it},label={Text("SNMP-Gerät / IP")},singleLine=true,enabled=!busy,modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(portText,{portText=it},label={Text("UDP-Port")},singleLine=true,enabled=!busy,modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(portText,{portText=it},label={Text("UDP-Port")},singleLine=true,enabled=!busy,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         OutlinedTextField(user,{user=it},label={Text("SNMPv3-Benutzer")},singleLine=true,enabled=!busy,modifier=Modifier.fillMaxWidth())
         OutlinedTextField(auth,{auth=it},label={Text("Authentifizierungspasswort")},singleLine=true,
-            visualTransformation=PasswordVisualTransformation(),enabled=!busy,modifier=Modifier.fillMaxWidth())
+            visualTransformation=PasswordVisualTransformation(),enabled=!busy,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),
+            modifier=Modifier.fillMaxWidth())
         OutlinedTextField(privacy,{privacy=it},label={Text("Verschlüsselungspasswort")},singleLine=true,
-            visualTransformation=PasswordVisualTransformation(),enabled=!busy,modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(oid,{oid=it},label={Text("OID")},singleLine=true,enabled=!busy,modifier=Modifier.fillMaxWidth())
+            visualTransformation=PasswordVisualTransformation(),enabled=!busy,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),
+            modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(oid,{oid=it},label={Text("OID")},singleLine=true,enabled=!busy,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Ascii),
+            modifier=Modifier.fillMaxWidth())
         if(user.isNotEmpty() && !validCreds) {
             Text("Benutzername max. 32 Byte; beide Passwörter mindestens 8 Byte.",
                 color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
