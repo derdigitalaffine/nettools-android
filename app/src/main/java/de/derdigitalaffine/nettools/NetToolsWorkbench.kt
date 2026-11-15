@@ -562,6 +562,14 @@ private fun WorkspaceEmpty(icon:androidx.compose.ui.graphics.vector.ImageVector,
 }
 
 @Composable private fun BleScreen(rows:List<String>,scanning:Boolean,start:()->Unit,stop:()->Unit) {
+    var strongOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var visibleLimit by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(24) }
+    val filtered=rows.filter { row ->
+        if(!strongOnly) true else {
+            val rssi=Regex("RSSI\\\\s+(-?\\\\d+)").find(row)?.groupValues?.getOrNull(1)?.toIntOrNull()
+            rssi!=null && rssi>=-70
+        }
+    }
     WorkspaceList {
         Panel("Bluetooth Low Energy","Geräte entdecken · Signalstärke und Service-UUIDs") {
             Row(verticalAlignment=Alignment.CenterVertically) {
@@ -599,11 +607,19 @@ private fun WorkspaceEmpty(icon:androidx.compose.ui.graphics.vector.ImageVector,
             Notice("Bluetooth- und Standortfreigaben sind geräteabhängig. Die App verbindet erkannte Geräte nicht automatisch.")
         }
         Panel("Geräte in Reichweite","Adressen, RSSI und annoncierte Dienste") {
-            if(rows.isEmpty()) {
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Text("${filtered.size} sichtbar",style=MaterialTheme.typography.labelMedium,
+                    color=MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier=Modifier.weight(1f))
+                FilterChip(selected=strongOnly,onClick={strongOnly=!strongOnly;visibleLimit=24},
+                    label={Text("RSSI ≥ −70 dBm")})
+            }
+            Spacer(Modifier.height(10.dp))
+            if(filtered.isEmpty()) {
                 WorkspaceEmpty(Icons.Outlined.BluetoothDisabled,
                     "Noch keine Geräte","Starte einen Scan, um BLE-Advertisements zu sehen.")
             } else {
-                rows.take(80).forEachIndexed { index,entry ->
+                filtered.take(visibleLimit).forEachIndexed { index,entry ->
                     val values=entry.split(" | ",limit=3)
                     val address=values.firstOrNull().orEmpty()
                     val rssi=values.getOrNull(1).orEmpty()
@@ -627,11 +643,13 @@ private fun WorkspaceEmpty(icon:androidx.compose.ui.graphics.vector.ImageVector,
                             }
                         }
                     }
-                    if(index<rows.size-1) Spacer(Modifier.height(8.dp))
+                    if(index<filtered.size-1) Spacer(Modifier.height(8.dp))
                 }
-                if(rows.size>80) Text("Weitere ${rows.size-80} Ergebnisse ausgeblendet.",
-                    color=MaterialTheme.colorScheme.onSurfaceVariant,
-                    style=MaterialTheme.typography.bodySmall)
+                if(filtered.size>visibleLimit) {
+                    OutlinedButton(onClick={visibleLimit+=24},modifier=Modifier.fillMaxWidth()) {
+                        Text("Weitere 24 anzeigen · ${visibleLimit.coerceAtMost(filtered.size)} / ${filtered.size}")
+                    }
+                }
             }
         }
         Notice("Bluetooth-Discovery ist kein Funk-Paketmitschnitt. GATT-Verbindungen und Classic-RFCOMM sind noch nicht implementiert.")
