@@ -63,8 +63,8 @@ fun NetToolsWorkbench(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var selected by rememberSaveableIndex()
-    var host by remember { mutableStateOf("example.org") }
-    var port by remember { mutableStateOf("443") }
+    var host by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("example.org") }
+    var port by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("443") }
     var running by remember { mutableStateOf(false) }
     var output by remember { mutableStateOf("Noch keine Messung durchgeführt") }
     val timings = remember { mutableStateListOf<Float>() }
@@ -494,7 +494,7 @@ private fun Diagnostics(
 private fun formatMs(f:Float) = "%.1f ms".format(Locale.US,f)
 @Composable
 private fun SubnetPanel() {
-    var cidr by remember { mutableStateOf("192.168.1.42/24") }
+    var cidr by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("192.168.1.42/24") }
     val calculation = remember(cidr) { runCatching { ipv4Subnet(cidr) } }
     Panel("IPv4-Subnetzrechner","Netzmaske, Adressbereich und nutzbare Hosts") {
         OutlinedTextField(value=cidr,onValueChange={cidr=it},label={Text("Adresse / CIDR")},
