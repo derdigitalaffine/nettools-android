@@ -1,45 +1,68 @@
-# NetTools Android – UI/UX-Qualitätsstandard
+# NetTools Android · UI/UX-Standard
 
-Stand 15.11.2026. Verbindlich für alle weiteren Module und PRs.
+Stand: 15.11.2026 · Schwerpunkt der Version **0.10.0-alpha**.
 
 ## Leitbild
-Professionelle Messplattform statt Sammlung isolierter Mini-Apps. Eine hochwertige Oberfläche muss die Ergebnisse **schnell erfassbar**, Messmethoden **ehrlich kenntlich**, Fehler **verständlich** und lange Messungen **kontrollierbar** machen. Ein Build allein beweist keine gute Usability.
 
-## Struktur und Navigation
-- Smartphones: kompakte Bottom Navigation für Übersicht, Diagnose, Funk, Sensoren und Hardware; alle Ziele schnell erreichbar.
-- Tablets: Navigation Rail, größere Karten, größere Lesebereiche; keine erzwungenen Smartphone-Screens.
-- Wiederverwendbare Komponenten: Workspace Header, Panel, Metric, Notice, Graph, Section; keine modulspezifischen konkurrierenden Farbwelten.
-- Werkzeugansicht immer in der Reihenfolge: **Ziel/Quelle → Einstellungen → Start/Stop → Live-Ausgabe → Analyse/History → Export**.
-- Keine Aktionsbuttons, die eine nicht implementierte Funktion vortäuschen; Roadmap-Funktionen eindeutig separat.
+Professionelle Netzwerk-Workbench statt einer langen Sammlung unverbundener Formulare. Zentrale Qualitätsziele sind **schnelle Orientierung, ruhige Hierarchie, konsistente Bedienung, eindeutige Zustände, ehrliche Funktionskennzeichnung und zugängliche Messwerte**.
 
-## Design-Tokens
-- Hintergrund #0B1822, Navigation #101F29, Karten #152530, Primärakzent #17A2A4, Haupttext #E9F1F4, Sekundärtext #9BADB9.
-- Runde Karten (ca. 22dp), harmonisierte Randabstände 12/14/18/20dp, Material3-Eingabefelder und Buttons.
-- Statusfarben sind semantisch, nicht alleinige Information: Test läuft, erfolgreich, fehlgeschlagen, nicht verfügbar, Berechtigung fehlt, abgebrochen.
-- Mindest-Touchflächen nach Android-Barrierefreiheitsstandard; Schriftvergrößerung und TalkBack beachten.
+## Implementierte Gestaltung
 
-## Daten- und Sicherheits-UX
-- Bei jeder Messung Ziel, Quellnetz/Interface, Methode und Datum erkennbar. Kein TCP-Connect als ICMP-Ping etikettieren.
-- Laufende Scans/Standortaufnahme sichtbar und per Stop-Schaltfläche beendbar.
-- Berechtigungen unmittelbar beim konkreten Benutzerwunsch anfordern; nach erfolgreicher Zustimmung diese Aktion fortsetzen, ohne automatischen erneuten Anlauf.
-- Fehlende Sensor-/BLE-/USB-Fähigkeiten transparent statt leerer oder erfundener Daten.
-- Grafiken immer zusätzlich als zugängliche numerische Daten und mit Einheiten; keine geschätzten Distanzen aus Bluetooth-RSSI als exakte Messwerte.
-- Bei basemap.de sichtbare Attribution und technische Information zur Kartenübertragung; Track/Geolokalisierung opt-in.
+### Navigation und responsive Ansichten
 
-## Testmatrix vor 1.0
-- Breiten 320/360/393/600/800/1200dp, Hoch-/Querformat, gefaltete/entfaltete Geräte.
-- 100%, 150% und 200% Schrift, TalkBack, Dark Mode, Tastatur und Hardware-Back.
-- Offline, DNS-Timeout, IPv6, fehlendes GPS, kein Bluetooth, gesperrte USB-Berechtigung, rotierende Android-Systemleisten.
-- Scan nach Grant/Deny/Don't ask again; Wechsel in Hintergrund; Abziehen von USB-Geräten.
-- Messwerte lang, Gerätebezeichnungen mit Unicode, 100+ BLE-Geräte, 200+ Sensoren, leere Listen.
-- Screenshot-Verifikation und Instrumentierung auf realem Smartphone/Tablet sind Pflicht vor UX-Freigabe. Aktuell noch ausstehend.
+- Kompakt: Bottom Navigation für Start, Diagnose, Funk, Sensoren, Hardware.
+- Mittel (ab ca. 740 dp Fensterbreite): Navigation Rail.
+- Weit (ab ca. 1160 dp): permanente Seitenleiste mit ausgeschriebenen Zielen.
+- Diagnosezentrum: Katalog mit **12 Tools**, Live-Suche nach Name/Beschreibung/Fähigkeit, Kategorie-Chips und Favoriten.
+- Diagnosezentrum ab ca. 760 dp verfügbarer Inhaltsbreite: **Liste und Werkzeugdetail nebeneinander**. Darunter: eigenständige Detailseite mit Zurück-Pfeil und Android-System-Zurück.
+- Pro Werkzeug wird nur **eine** interaktive Arbeitsfläche angezeigt. Keine zwölf parallel aufgebauten Werkzeuge auf einer Scrollseite.
+- Favoriten und Designauswahl bleiben nach App-Neustart erhalten. Saveable Formulareingaben bleiben beim internen Navigieren erhalten; SNMP-Credentials werden **nicht** persistiert.
 
-## Nächste UI-Epics
-1. Vollständige Designsystem-Extraktion in `core:designsystem`; Compose Preview/Screenshot-Tests für alle Zustände.
-2. Tool-Katalog und globale Suche/Favoriten/Verlauf mit Zielsystemprofilen.
-3. Grafisches ICMP/Traceroute/SmokePing mit Zoom, Zeitbereich, Hop- und Loss-Ansichten.
-4. BLE-GATT-Gerätedetailseite, RSSI-Karten und Live-Subscription-Protokoll.
-5. GNSS-Skyplot, Lagegenauigkeitsanzeige, Sensorgraphs und Trackkarte mit MapLibre Layern.
-6. USB-Serial-Terminal mit echten Hardware-Permissions, Baud/Parity-Konfiguration, Connect/Disconnect.
-7. Persistente Diagnosesessions (Room), Export und Diagnosereport-Workbench.
-8. Accessibility/Screenshot/E2E/Hardware-Regression, Tablet-Split-Pane und echtes User-Testing.
+### Designsystem
+
+Implementiert in `NetToolsTheme.kt`: Material 3, helle und dunkle Palette, semantische Container, 12/16/22-dp-Rundungen, harmonisierte Textgrößen, typografische Hierarchie. Keine externen Schriftdateien.
+
+- Dark: Hintergrund `#09141E`, Surface `#101E29`, Primär `#68DED6`, Haupttext `#F0F6F9`.
+- Light: Hintergrund `#F4F7F9`, Surface `#FFFFFF`, Primär `#006F72`, Haupttext `#172B36`.
+- Kategorien und Status werden **nicht allein über Farbe** kommuniziert; Messmethode und Funktionsgrenzen bleiben als Text erkennbar.
+- Reusable: Header, Panel, Metric, Notice, Empty State, Tool-Row, Diagnose-Split-Pane.
+
+### Die wichtigsten Screens
+
+- **Dashboard:** Verbindungs-Hero, Netzwerk- und DNS-Kennzahlen, Schnellaktionen, kopierbare IP/DNS-Daten und explizit einblendbare Routen.
+- **Diagnose:** indexierte Werkzeuge, Suche, Favoriten, Fähigkeits-/Methodenhinweise und Back-Navigation.
+- **BLE:** aktiver Scanstatus, klarer Start/Stopp, RSSI-Filter, Geräte-Karten und inkrementelles Nachladen.
+- **GNSS/Sensoren:** große primäre Positionstaste, Karten-Shortcut, definierte Leerzustände und Sensor-Karten.
+- **USB:** Geräteanzahl, manueller Refresh, Vendor-/Product-ID und Schnittstellen pro Gerät.
+- **Karte:** schwebende Kartensteuerung, basemap.de-Stilauswahl, Ladezustand, Startausschnitt-Reset und sichtbare Quellenangabe.
+- **Scanner:** begrenzte Ergebnisse pro sichtbarer Seite, Status/Messmethode, progressive Offenlegung der optionalen Dienstindizien.
+- **Formulare:** passende Android-Tastaturen für Port- und Timeout-Zahlen, OID, Adressen und verdeckte Credentials.
+
+## Sicherheits- und Messmethoden-UX
+
+- Kein Root-/Raw-L2-Versprechen ohne nachgewiesene Device-Capability.
+- TCP-Connect wird niemals als ICMP ausgewiesen.
+- Serviceport-Namen sind **Hinweise**, keine bestätigten Dienstversionen.
+- SNMPv2c und SNMPv3 werden als unverschlüsselte bzw. AuthPriv-Varianten gekennzeichnet.
+- Nur explizit ausgelöste Scans und Standortmessungen; Abbruchfunktionen sichtbar. Keine automatischen SNMP-SETs.
+- Aufruf von Kartenkacheln über basemap.de ist sichtbar deklariert.
+- Zugangsdaten nicht im Einstellungsstore oder Scan-Export persistieren.
+
+## Noch ausstehende Qualitätstore
+
+1. Screenshot-/Instrumentierungstests auf 320/360/393/600/800/1200 dp und verschiedenen Formfaktoren; prüfen, ob Felder bei IME-Öffnung erreichbar bleiben.
+2. TalkBack-Fokusreihenfolge, 48-dp-Interaktionsflächen, dynamische Schrift 100/150/200 % und Keyboard-Navigation testen.
+3. Touch- und Navigationsregression bei laufenden Messungen und wiederholtem Wechsel zwischen Werkzeugen.
+4. Test mit 100+ BLE-Geräten, 200+ Sensoren, sehr langen Hostnamen und Fehlermeldungen.
+5. Theme-Umschaltung, Rotation und Prozesswiederherstellung prüfen; keine Speicherung sensibler SNMP-Credentials.
+6. USB/MapLibre/BLE/GNSS auf physischer Hardware, offline und mit gesperrten Berechtigungen prüfen.
+
+**Status:** Die Kotlin-/Compose-Implementierung kann per CI kompilieren. Ein erfolgreicher CI-Lauf ist **kein** Ersatz für Accessibility-, Screenshot- und reale Endgeräteprüfungen.
+
+## Weiterführende UI-Epics
+
+- Einheitliches, Modul-übergreifendes Sitzungsarchiv mit datensparsamer Export-/Löschfunktion.
+- Per-Tool Live-Graphen mit Daten-/Zeitachsen, Zoom, Tabellenalternative und p50/p95.
+- BLE-GATT-Detailansicht mit ausdrücklich bestätigter Verbindung.
+- Sensordashboards, GNSS-Skyplot, USB-Serial-Konsole.
+- Einstellungspanel für Kontrast, Schriftgrößen und Quellnetzauswahl.
