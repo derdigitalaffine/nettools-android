@@ -566,7 +566,7 @@ private fun WorkspaceEmpty(icon:androidx.compose.ui.graphics.vector.ImageVector,
     var visibleLimit by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(24) }
     val filtered=rows.filter { row ->
         if(!strongOnly) true else {
-            val rssi=Regex("RSSI\\\\s+(-?\\\\d+)").find(row)?.groupValues?.getOrNull(1)?.toIntOrNull()
+            val rssi=Regex("""RSSI\s+(-?\d+)""").find(row)?.groupValues?.getOrNull(1)?.toIntOrNull()
             rssi!=null && rssi>=-70
         }
     }
