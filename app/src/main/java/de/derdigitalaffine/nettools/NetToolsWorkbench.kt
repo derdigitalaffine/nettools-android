@@ -353,6 +353,12 @@ private fun Diagnostics(
         Panel("Live-Monitoring","TCP-Connect-Verfügbarkeit · Zeitreihen · CSV-Export") {
             TcpMonitor()
         }
+        Panel("ICMP Ping","Echte Echo-Anfragen mit RTT und Verlustquote") {
+            IcmpDiagnostics()
+        }
+        Panel("Traceroute","TTL-basierte Hop-Analyse mit Live-Ergebnissen") {
+            RouteDiagnostics()
+        }
         Panel("DNS-Explorer","A, AAAA, MX, TXT, NS, CNAME, SOA, SRV, PTR und CAA") {
             DnsExplorer()
         }
