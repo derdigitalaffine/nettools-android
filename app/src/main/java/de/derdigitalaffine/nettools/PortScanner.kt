@@ -88,6 +88,9 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
     var shownLimit by remember { mutableIntStateOf(60) }
     var shareError by remember { mutableStateOf<String?>(null) }
     val results=remember { mutableStateListOf<PortResult>() }
+    val serviceDetails=remember { mutableStateMapOf<Int,ServiceIdentification>() }
+    var serviceBusy by remember { mutableStateOf(false) }
+    var serviceJob by remember { mutableStateOf<Job?>(null) }
     val parsed=remember(portsText) { runCatching { parsePortList(portsText) } }
     val timeout=timeoutText.toIntOrNull()?.takeIf { it in 200..5000 }
     val concurrency=concurrencyText.toIntOrNull()?.takeIf { it in 1..32 }
@@ -118,7 +121,7 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
                     val ms=timeout ?: return@Button
                     val parallel=concurrency ?: return@Button
                     val target=host.trim()
-                    results.clear();completed=0;shownLimit=60;shareError=null;active=true
+                    results.clear();serviceDetails.clear();completed=0;shownLimit=60;shareError=null;active=true
                     job=scope.launch {
                         try {
                             val limiter=Semaphore(parallel)
@@ -137,16 +140,48 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
                         } finally { active=false }
                     }
                 }
-            },enabled=active || (host.isNotBlank() && parsed.isSuccess && timeout!=null && concurrency!=null),modifier=Modifier.weight(1f)) {
+            },enabled=active || (!serviceBusy && host.isNotBlank() && parsed.isSuccess && timeout!=null && concurrency!=null),modifier=Modifier.weight(1f)) {
                 Text(if(active) "Stoppen" else "Ports prüfen")
             }
-            OutlinedButton(onClick={results.clear()},enabled=!active && results.isNotEmpty()) { Text("Leeren") }
+            OutlinedButton(onClick={results.clear()},enabled=!active && !serviceBusy && results.isNotEmpty()) { Text("Leeren") }
         }
         if(active) {
             Text("Fortschritt: $completed / ${parsed.getOrNull()?.size ?: 0}")
             LinearProgressIndicator(progress={ completed.toFloat() / (parsed.getOrNull()?.size ?: 1).coerceAtLeast(1) },modifier=Modifier.fillMaxWidth())
         }
-        if(results.isNotEmpty() && !active) {
+        if(!active && results.any { it.open && supportsSafeServiceProbe(it.port) }) {
+            Button(onClick={
+                if(serviceBusy) {
+                    serviceJob?.cancel()
+                    serviceBusy=false
+                } else {
+                    val target=host.trim()
+                    val candidates=results.filter { it.open && supportsSafeServiceProbe(it.port) }.take(24)
+                    serviceDetails.clear()
+                    serviceBusy=true
+                    serviceJob=scope.launch {
+                        try {
+                            val limiter=Semaphore(4)
+                            candidates.map { result ->
+                                async(Dispatchers.IO) {
+                                    limiter.withPermit {
+                                        val evidence=identifyOpenPortService(target,result.port)
+                                        withContext(Dispatchers.Main) { serviceDetails[result.port]=evidence }
+                                    }
+                                }
+                            }.awaitAll()
+                        } catch (_:CancellationException) {
+                        } finally { serviceBusy=false }
+                    }
+                }
+            },modifier=Modifier.fillMaxWidth()) {
+                Text(if(serviceBusy) "Diensterkennung stoppen" else "Diensthinweise ermitteln (max. 24 Ports)")
+            }
+            if(serviceBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
+            Text("Optional: HTTP HEAD, Banner oder validierter TLS-Handshake. Keine vollständige Nmap -sV-Erkennung.",
+                style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if(results.isNotEmpty() && !active && !serviceBusy) {
             OutlinedButton(onClick={
                 val csv=buildString {
                     append("Port,Protocol,State,LatencyMs,Note\n")
@@ -180,6 +215,10 @@ private fun probePort(host:String,port:Int,timeoutMs:Int):PortResult {
                     color=if(result.open) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 Text((result.latencyMs?.let { "%.1f ms".format(Locale.US,it) } ?: result.reason) + " · Standardport-Hinweis: " + (portServiceHints[result.port] ?: "nicht zugeordnet"),
                     style=MaterialTheme.typography.bodySmall)
+                serviceDetails[result.port]?.let { details ->
+                    Text(details.method+" · "+details.details,style=MaterialTheme.typography.bodySmall,
+                        color=MaterialTheme.colorScheme.primary)
+                }
             }
             if(visible.size>shownLimit) {
                 OutlinedButton(onClick={shownLimit+=60},modifier=Modifier.fillMaxWidth()) {
