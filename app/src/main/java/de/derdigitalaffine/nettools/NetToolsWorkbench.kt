@@ -139,7 +139,7 @@ fun NetToolsWorkbench(
                                     ctx.permissionOk(Manifest.permission.ACCESS_FINE_LOCATION)) startLocation()
                                 else { requestedPermissionFor="gps"; permissions.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)) }
                             },
-                            openMap={ctx.startActivity(Intent(ctx, MapActivity::class.java))},
+                            openMap={ctx.startActivity(Intent(ctx, MapActivity::class.java).putExtra("dark",darkTheme))},
                             start={sensorActive=true;startSensors()}, stop={sensorActive=false;stopSensors()}
                         )
                         else -> UsbScreen(ctx,usbRefresh) { usbRefresh++ }
