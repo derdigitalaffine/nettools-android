@@ -62,6 +62,7 @@ fun NetToolsWorkbench(
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
+    val snackbar=remember { SnackbarHostState() }
     var selected by rememberSaveableIndex()
     var host by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("example.org") }
     var port by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("443") }
@@ -78,6 +79,13 @@ fun NetToolsWorkbench(
                 "ble" -> startBle()
                 "gps" -> startLocation()
             }
+        } else {
+            val message=when(requestedPermissionFor) {
+                "ble" -> "Bluetooth-Freigabe fehlt. Bitte Berechtigung in Android erteilen."
+                "gps" -> "Standortfreigabe fehlt. Die Positionsmessung wurde nicht gestartet."
+                else -> "Die erforderliche Berechtigung wurde nicht erteilt."
+            }
+            scope.launch { snackbar.showSnackbar(message,withDismissAction=true) }
         }
         requestedPermissionFor=null
     }
@@ -223,6 +231,11 @@ fun NetToolsWorkbench(
                         Box(Modifier.fillMaxSize().padding(padding)) { content() }
                     }
             }
+            SnackbarHost(
+                hostState=snackbar,
+                modifier=Modifier.align(Alignment.BottomCenter)
+                    .padding(horizontal=14.dp,bottom=if(wide) 18.dp else 92.dp)
+            )
         }
     }
 }
