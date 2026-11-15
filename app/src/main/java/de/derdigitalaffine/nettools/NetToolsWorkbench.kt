@@ -353,6 +353,9 @@ private fun Diagnostics(
         Panel("Live-Monitoring","TCP-Connect-Verfügbarkeit · Zeitreihen · CSV-Export") {
             TcpMonitor()
         }
+        Panel("DNS-Explorer","A, AAAA, MX, TXT, NS, CNAME, SOA, SRV, PTR und CAA") {
+            DnsExplorer()
+        }
         Panel("TLS / HTTPS","Zertifikat, TLS-Version, Cipher und SHA-256-Fingerprint") {
             TlsInspectorPanel(host)
         }
