@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
         locationManager = getSystemService(LocationManager::class.java)
         setContent {
             MaterialTheme {
-                Dashboard(
+                NetToolsWorkbench(
                     bleRows = bleRows, scanning = scanning, position = position,
                     sensorRows = sensorRows, getSensors = { sensorManager?.getSensorList(Sensor.TYPE_ALL)?.map { it.name + " — " + it.vendor } ?: emptyList() },
                     startBle = ::startBle, stopBle = ::stopBle,
