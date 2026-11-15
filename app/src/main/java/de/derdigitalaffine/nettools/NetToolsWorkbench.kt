@@ -81,7 +81,8 @@ fun NetToolsWorkbench(
         }
         requestedPermissionFor=null
     }
-    var darkTheme by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
+    var darkTheme by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(UiPreferenceStore.isDark(ctx)) }
+    val tabStates=androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     NetToolsTheme(dark=darkTheme) {
         BoxWithConstraints(Modifier.fillMaxSize()
             .background(MaterialTheme.colorScheme.background).safeDrawingPadding()) {
@@ -90,7 +91,11 @@ fun NetToolsWorkbench(
             val select: (Int)->Unit = { selected = it }
             val content: @Composable () -> Unit = {
                 Column(Modifier.fillMaxSize()) {
-                    Header(pages[selected].title,darkTheme,{darkTheme=!darkTheme})
+                    Header(pages[selected].title,darkTheme,{
+                        darkTheme=!darkTheme
+                        UiPreferenceStore.setDark(ctx,darkTheme)
+                    })
+                    tabStates.SaveableStateProvider(selected) {
                     when(selected) {
                         0 -> Overview(
                             network=network, bleCount=bleRows.size, sensorCount=getSensors().size,
@@ -143,6 +148,7 @@ fun NetToolsWorkbench(
                             start={sensorActive=true;startSensors()}, stop={sensorActive=false;stopSensors()}
                         )
                         else -> UsbScreen(ctx,usbRefresh) { usbRefresh++ }
+                    }
                     }
                 }
             }
