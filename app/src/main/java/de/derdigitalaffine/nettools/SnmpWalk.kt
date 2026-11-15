@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,7 +62,8 @@ private val walkProfiles=listOf(
         Text("Read-only Walk über SNMPv2c. Maximal 200 Antworten; stoppt an der Teilbaumgrenze, bei endOfMibView oder ungültiger Reihenfolge.",
             style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(host,{host=it},label={Text("SNMP-Gerät / IP")},enabled=!busy,singleLine=true,modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(portText,{portText=it},label={Text("UDP-Port")},enabled=!busy,singleLine=true,modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(portText,{portText=it},label={Text("UDP-Port")},enabled=!busy,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         OutlinedTextField(community,{community=it},label={Text("Community")},enabled=!busy,singleLine=true,
             visualTransformation=PasswordVisualTransformation(),modifier=Modifier.fillMaxWidth())
         Text("MIB-Auswahl",style=MaterialTheme.typography.labelLarge)
@@ -69,8 +72,10 @@ private val walkProfiles=listOf(
                 FilterChip(selected=root==oid,onClick={if(!busy) root=oid},label={Text(name)},enabled=!busy)
             }
         }
-        OutlinedTextField(root,{root=it},label={Text("Teilbaum-OID")},enabled=!busy,singleLine=true,modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(limitText,{limitText=it},label={Text("Maximale Einträge (1–200)")},enabled=!busy,singleLine=true,modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(root,{root=it},label={Text("Teilbaum-OID")},enabled=!busy,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Ascii),
+            modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(limitText,{limitText=it},label={Text("Maximale Einträge (1–200)")},enabled=!busy,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+            modifier=Modifier.fillMaxWidth())
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             Button(onClick={
                 if(busy) {
