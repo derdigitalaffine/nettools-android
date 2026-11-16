@@ -5,7 +5,7 @@ on:
   pull_request:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,3 +29,25 @@ jobs:
           name: nettools-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Publish 0.10.0-alpha GitHub prerelease
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v0.10.0-alpha
+        run: |
+          set -euo pipefail
+          apk="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$apk"
+          sha256sum "$apk" > nettools-android-v0.10.0-alpha-debug.apk.sha256
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving its artifacts unchanged."
+            exit 0
+          fi
+          gh release create "$TAG" \
+            "$apk#nettools-android-v0.10.0-alpha-debug.apk" \
+            "nettools-android-v0.10.0-alpha-debug.apk.sha256" \
+            --target "$GITHUB_SHA" \
+            --title "NetTools Android 0.10.0-alpha" \
+            --prerelease \
+            --notes "Adaptive Material-3-Oberfläche mit Diagnosekatalog, Suche, Favoriten, Light/Dark-Mode, Dashboard, BLE-, GNSS-, USB- und Karten-Polish. Debug-APK, nicht produktionssigniert. Automatisiert gebaut und mit Unit-Tests geprüft; Hardware- und Accessibility-Abnahme steht noch aus."
